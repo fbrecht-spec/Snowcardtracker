@@ -325,11 +325,11 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-gray-900 pb-32 max-w-lg mx-auto shadow-2xl overflow-hidden relative">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-gray-900 pb-[calc(8rem_+_env(safe-area-inset-bottom))] max-w-lg mx-auto shadow-2xl overflow-hidden relative">
       <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-blue-50/50 to-transparent -z-10" />
 
       {/* Header */}
-      <header className="px-6 pt-12 pb-6 flex justify-between items-end">
+      <header className="px-6 pt-[max(3rem,calc(env(safe-area-inset-top)_+_1rem))] pb-6 flex justify-between items-end">
         <div className="flex items-center gap-3">
           <div className="bg-blue-600 p-2.5 rounded-2xl text-white shadow-xl shadow-blue-100 rotate-3 transition-transform hover:rotate-0">
             <CloudSnow size={28} />
@@ -577,7 +577,7 @@ const App: React.FC = () => {
 
       {/* Add Day Modal */}
       {isAddingDay && (
-        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-md flex items-end justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-md flex items-end justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="bg-white w-full max-w-lg rounded-[3rem] p-10 space-y-8 shadow-2xl relative mb-4">
             <div className="flex justify-between items-center">
               <h3 className="text-3xl font-black text-blue-900">{editingDay ? 'Tag bearbeiten' : 'Neuer Tag'}</h3>
@@ -638,7 +638,7 @@ const App: React.FC = () => {
       )}
 
       {/* Navigation Tab Bar */}
-      <nav className="fixed bottom-6 left-6 right-6 max-w-lg mx-auto bg-white/95 backdrop-blur-2xl border border-white/50 rounded-[2.5rem] px-8 py-5 flex justify-between items-center z-40 shadow-2xl">
+      <nav className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-[max(1.5rem,env(safe-area-inset-left))] right-[max(1.5rem,env(safe-area-inset-right))] max-w-lg mx-auto bg-white/95 backdrop-blur-2xl border border-white/50 rounded-[2.5rem] px-8 py-5 flex justify-between items-center z-40 shadow-2xl">
         {[
           { id: 'dashboard', icon: LayoutDashboard, label: 'Status' },
           { id: 'history', icon: History, label: 'Logs' },

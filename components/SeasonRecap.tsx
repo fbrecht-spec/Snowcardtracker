@@ -23,7 +23,7 @@ export const SeasonRecap: React.FC<SeasonRecapProps> = ({ days, resorts, seasonL
   const resortName = resorts.find(r => r.id === topResort?.[0])?.name || days.find(d => d.resortId === topResort?.[0])?.resortName || 'Unbekannt';
 
   return (
-    <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 overflow-y-auto">
+    <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] overflow-y-auto">
       <div className="w-full max-w-sm relative py-12">
         <button onClick={onClose} className="absolute top-0 right-0 text-white opacity-60 hover:opacity-100 transition-opacity p-2">
           <X size={32} />
