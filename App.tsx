@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check } from 'lucide-react';
+import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check, Pencil } from 'lucide-react';
 import { AppState, SkiDay, Resort, SnowcardTierKey, ArchivedSeason, Award } from './types';
 import { loadState, saveState } from './storage';
+import { todayLocal, getSeasonLabel, parseLocalDate } from './dateUtils';
 import { StatsCard } from './components/StatsCard';
 import { BreakEvenChart } from './components/BreakEvenChart';
 import { ResortUsageChart } from './components/ResortUsageChart';
@@ -15,25 +16,35 @@ const App: React.FC = () => {
   const [state, setState] = useState<AppState>(loadState);
 
   const [isAddingDay, setIsAddingDay] = useState(false);
+  const [editingDayId, setEditingDayId] = useState<string | null>(null);
+  const [applyCurrentPrice, setApplyCurrentPrice] = useState(false);
   const [isAddingResort, setIsAddingResort] = useState(false);
   const [newResortName, setNewResortName] = useState('');
   const [newResortPrice, setNewResortPrice] = useState(65);
   const [showRecap, setShowRecap] = useState(false);
-  const [newDayDate, setNewDayDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newDayDate, setNewDayDate] = useState(todayLocal);
   const [selectedResortId, setSelectedResortId] = useState('');
 
-  const getSeasonLabel = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const month = d.getMonth() + 1;
-    const year = d.getFullYear();
-    return month >= 10 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
-  };
+  const currentSeasonLabel = useMemo(() => getSeasonLabel(todayLocal()), []);
 
-  const currentSeasonLabel = useMemo(() => getSeasonLabel(new Date().toISOString()), []);
+  // Nur Tage der aktuellen Saison zählen für Dashboard, Logbuch und Awards
+  const seasonDays = useMemo(() => state.skiDays.filter(d => getSeasonLabel(d.date) === currentSeasonLabel), [state.skiDays, currentSeasonLabel]);
+
+  // Noch nicht archivierte Tage aus anderen Saisons
+  const otherSeasons = useMemo(() => {
+    const counts: Record<string, number> = {};
+    state.skiDays.forEach(d => {
+      const label = getSeasonLabel(d.date);
+      if (label !== currentSeasonLabel) counts[label] = (counts[label] || 0) + 1;
+    });
+    return Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([label, count]) => ({ label, count }));
+  }, [state.skiDays, currentSeasonLabel]);
 
   const sortedResorts = useMemo(() => {
     return [...state.settings.resorts].sort((a, b) => a.name.localeCompare(b.name));
   }, [state.settings.resorts]);
+
+  const resortNameOf = (day: SkiDay) => state.settings.resorts.find(r => r.id === day.resortId)?.name ?? day.resortName ?? 'Unbekannt';
 
   useEffect(() => {
     if (!selectedResortId && sortedResorts.length > 0) {
@@ -42,9 +53,9 @@ const App: React.FC = () => {
   }, [sortedResorts, selectedResortId]);
 
   const awards = useMemo<Award[]>(() => {
-    const visitedCount = new Set(state.skiDays.map(d => d.resortId)).size;
-    const daysCount = state.skiDays.length;
-    const hasGlacier = state.skiDays.some(d => {
+    const visitedCount = new Set(seasonDays.map(d => d.resortId)).size;
+    const daysCount = seasonDays.length;
+    const hasGlacier = seasonDays.some(d => {
       const r = state.settings.resorts.find(res => res.id === d.resortId);
       return r?.glacier === true;
     });
@@ -69,24 +80,24 @@ const App: React.FC = () => {
       if (b.id === 'hopper' || b.id === 'glacier') return -1;
       return aTarget - bTarget;
     });
-  }, [state.skiDays, state.settings.resorts]);
+  }, [seasonDays, state.settings.resorts]);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
 
   const activePrice = useMemo(() => state.settings.snowcardTiers[state.settings.activeTier], [state.settings.snowcardTiers, state.settings.activeTier]);
-  const totalSpent = useMemo(() => state.skiDays.reduce((sum, day) => sum + day.priceAtTime, 0), [state.skiDays]);
-  const avgCostPerDay = useMemo(() => state.skiDays.length > 0 ? (activePrice / state.skiDays.length) : 0, [activePrice, state.skiDays.length]);
-  
+  const totalSpent = useMemo(() => seasonDays.reduce((sum, day) => sum + day.priceAtTime, 0), [seasonDays]);
+  const avgCostPerDay = useMemo(() => seasonDays.length > 0 ? (activePrice / seasonDays.length) : 0, [activePrice, seasonDays.length]);
+
   const breakEvenStatus = useMemo(() => {
     const diff = activePrice - totalSpent;
     const isProfitable = diff <= 0;
-    
+
     let cumulative = 0;
     let breakEvenIndex = -1;
-    const sortedDays = [...state.skiDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+    const sortedDays = [...seasonDays].sort((a, b) => a.date.localeCompare(b.date));
+
     sortedDays.forEach((day, index) => {
       cumulative += day.priceAtTime;
       if (cumulative >= activePrice && breakEvenIndex === -1) {
@@ -94,8 +105,8 @@ const App: React.FC = () => {
       }
     });
 
-    const freeDaysCount = breakEvenIndex !== -1 ? (state.skiDays.length - 1 - breakEvenIndex) : 0;
-    
+    const freeDaysCount = breakEvenIndex !== -1 ? (seasonDays.length - 1 - breakEvenIndex) : 0;
+
     // Progress calculation for the bar
     // If not profitable: baseProgress is blue part.
     // If profitable: we show green part (up to activePrice) and turquoise part (rest).
@@ -103,10 +114,10 @@ const App: React.FC = () => {
     const profitRatio = isProfitable ? ((totalSpent - activePrice) / totalSpent) * 100 : 0;
     const baseRatio = isProfitable ? (activePrice / totalSpent) * 100 : baseProgress;
 
-    return { 
-      diff: Math.abs(diff), 
-      isProfitable, 
-      daysCount: state.skiDays.length, 
+    return {
+      diff: Math.abs(diff),
+      isProfitable,
+      daysCount: seasonDays.length,
       savings: isProfitable ? Math.abs(totalSpent - activePrice) : 0,
       totalValue: totalSpent,
       freeDaysCount: Math.max(0, freeDaysCount),
@@ -114,21 +125,25 @@ const App: React.FC = () => {
       baseRatio,
       profitRatio
     };
-  }, [totalSpent, activePrice, state.skiDays]);
+  }, [totalSpent, activePrice, seasonDays]);
 
   const resortUsageData = useMemo(() => {
     const counts: Record<string, number> = {};
-    state.skiDays.forEach(day => { counts[day.resortId] = (counts[day.resortId] || 0) + 1; });
+    const names: Record<string, string> = {};
+    seasonDays.forEach(day => {
+      counts[day.resortId] = (counts[day.resortId] || 0) + 1;
+      names[day.resortId] = state.settings.resorts.find(r => r.id === day.resortId)?.name ?? day.resortName ?? 'Unbekannt';
+    });
     return Object.entries(counts).map(([id, count]) => ({
-      name: state.settings.resorts.find(r => r.id === id)?.name.split('/')[0].trim() || 'Unbekannt',
+      name: names[id].split('/')[0].trim(),
       count
     })).sort((a, b) => b.count - a.count);
-  }, [state.skiDays, state.settings.resorts]);
+  }, [seasonDays, state.settings.resorts]);
 
   const monthlyUsageData = useMemo(() => {
     const counts: Record<string, number> = {};
     const monthOrder = ['10', '11', '12', '01', '02', '03', '04', '05'];
-    state.skiDays.forEach(day => {
+    seasonDays.forEach(day => {
       const month = day.date.split('-')[1];
       counts[month] = (counts[month] || 0) + 1;
     });
@@ -136,24 +151,83 @@ const App: React.FC = () => {
       name: new Date(2024, parseInt(m) - 1, 1).toLocaleDateString('de-DE', { month: 'short' }).toUpperCase(),
       count: counts[m] || 0
     }));
-  }, [state.skiDays]);
+  }, [seasonDays]);
 
-  const addSkiDay = () => {
-    const resort = state.settings.resorts.find(r => r.id === selectedResortId);
-    if (!resort) return;
-    const newDay: SkiDay = { id: crypto.randomUUID(), date: newDayDate, resortId: selectedResortId, priceAtTime: resort.dailyPrice };
-    setState(prev => ({ ...prev, skiDays: [...prev.skiDays, newDay] }));
+  const openAddDay = () => {
+    setEditingDayId(null);
+    setNewDayDate(todayLocal());
+    if (!state.settings.resorts.some(r => r.id === selectedResortId) && sortedResorts.length > 0) {
+      setSelectedResortId(sortedResorts[0].id);
+    }
+    setIsAddingDay(true);
+  };
+
+  const openEditDay = (day: SkiDay) => {
+    setEditingDayId(day.id);
+    setNewDayDate(day.date);
+    setSelectedResortId(day.resortId);
+    setApplyCurrentPrice(false);
+    setIsAddingDay(true);
+  };
+
+  const closeDayModal = () => {
     setIsAddingDay(false);
+    setEditingDayId(null);
+  };
+
+  const editingDay = editingDayId ? state.skiDays.find(d => d.id === editingDayId) : undefined;
+  const selectedResort = state.settings.resorts.find(r => r.id === selectedResortId);
+
+  const saveSkiDay = () => {
+    if (!newDayDate) return;
+    // Beim Bearbeiten darf ein inzwischen gelöschtes Gebiet erhalten bleiben
+    const keepsDeletedResort = !!editingDay && editingDay.resortId === selectedResortId;
+    if (!selectedResort && !keepsDeletedResort) return;
+
+    const isDuplicate = state.skiDays.some(d => d.id !== editingDayId && d.date === newDayDate && d.resortId === selectedResortId);
+    if (isDuplicate) {
+      const name = selectedResort?.name ?? editingDay?.resortName ?? 'Unbekannt';
+      const dateLabel = parseLocalDate(newDayDate).toLocaleDateString('de-DE');
+      if (!confirm(`Am ${dateLabel} gibt es bereits einen Skitag in ${name}. Trotzdem speichern?`)) return;
+    }
+
+    if (editingDay) {
+      const updated: SkiDay = {
+        ...editingDay,
+        date: newDayDate,
+        resortId: selectedResortId,
+        priceAtTime: applyCurrentPrice && selectedResort ? selectedResort.dailyPrice : editingDay.priceAtTime
+      };
+      if (selectedResort) delete updated.resortName;
+      setState(prev => ({ ...prev, skiDays: prev.skiDays.map(d => d.id === updated.id ? updated : d) }));
+    } else if (selectedResort) {
+      const newDay: SkiDay = { id: crypto.randomUUID(), date: newDayDate, resortId: selectedResortId, priceAtTime: selectedResort.dailyPrice };
+      setState(prev => ({ ...prev, skiDays: [...prev.skiDays, newDay] }));
+    }
+    closeDayModal();
   };
 
   const deleteSkiDay = (id: string) => setState(prev => ({ ...prev, skiDays: prev.skiDays.filter(d => d.id !== id) }));
-  
-  const archiveCurrentSeason = () => {
-    if (state.skiDays.length === 0) return;
-    if (!confirm(`Möchtest du die Saison archivieren?`)) return;
-    const archiveEntry: ArchivedSeason = { seasonLabel: currentSeasonLabel, days: state.skiDays, snowcardPrice: activePrice, totalValue: totalSpent, profit: Math.max(0, totalSpent - activePrice) };
-    setState(prev => ({ ...prev, archivedSeasons: [archiveEntry, ...prev.archivedSeasons], skiDays: [] }));
-    setActiveTab('history');
+
+  // Archiviert alle Tage einer Saison. Das Label kommt aus dem Datum der Tage.
+  // Existiert die Saison schon im Archiv, werden die Tage dort ergänzt.
+  const archiveSeason = (label: string) => {
+    const days = state.skiDays.filter(d => getSeasonLabel(d.date) === label);
+    if (days.length === 0) return;
+    if (!confirm(`Möchtest du die Saison ${label} archivieren? (${days.length} Skitage)`)) return;
+    setState(prev => {
+      const existing = prev.archivedSeasons.find(s => s.seasonLabel === label);
+      const allDays = [...(existing?.days ?? []), ...prev.skiDays.filter(d => getSeasonLabel(d.date) === label)];
+      const snowcardPrice = existing?.snowcardPrice ?? activePrice;
+      const totalValue = allDays.reduce((sum, d) => sum + d.priceAtTime, 0);
+      const archiveEntry: ArchivedSeason = { seasonLabel: label, days: allDays, snowcardPrice, totalValue, profit: Math.max(0, totalValue - snowcardPrice) };
+      return {
+        ...prev,
+        archivedSeasons: [archiveEntry, ...prev.archivedSeasons.filter(s => s.seasonLabel !== label)],
+        skiDays: prev.skiDays.filter(d => getSeasonLabel(d.date) !== label)
+      };
+    });
+    if (label === currentSeasonLabel) setActiveTab('history');
   };
 
   const addResort = () => {
@@ -167,7 +241,40 @@ const App: React.FC = () => {
   const updateSnowcardTierPrice = (tier: SnowcardTierKey, price: number) => setState(prev => ({ ...prev, settings: { ...prev.settings, snowcardTiers: { ...prev.settings.snowcardTiers, [tier]: price } } }));
   const setActiveTier = (tier: SnowcardTierKey) => setState(prev => ({ ...prev, settings: { ...prev.settings, activeTier: tier } }));
   const updateResortPrice = (id: string, price: number) => setState(prev => ({ ...prev, settings: { ...prev.settings, resorts: prev.settings.resorts.map(r => r.id === id ? { ...r, dailyPrice: price } : r) } }));
-  const deleteResort = (id: string) => { if (confirm('Wirklich löschen?')) setState(prev => ({ ...prev, settings: { ...prev.settings, resorts: prev.settings.resorts.filter(r => r.id !== id) } })); };
+
+  // Gebiet löschen: Skitage, die darauf verweisen, behalten den Namen in resortName.
+  const deleteResort = (id: string) => {
+    const resort = state.settings.resorts.find(r => r.id === id);
+    if (!resort) return;
+    const refCount = state.skiDays.filter(d => d.resortId === id).length
+      + state.archivedSeasons.reduce((sum, s) => sum + s.days.filter(d => d.resortId === id).length, 0);
+    const message = refCount > 0
+      ? `„${resort.name}“ wird in ${refCount} Skitag(en) verwendet. Der Name bleibt in diesen Skitagen erhalten, das Gebiet verschwindet aber aus Auswahl, Karte und Gletscher-Award. Trotzdem löschen?`
+      : `„${resort.name}“ wirklich löschen?`;
+    if (!confirm(message)) return;
+    const keepName = (d: SkiDay): SkiDay => d.resortId === id ? { ...d, resortName: d.resortName ?? resort.name } : d;
+    setState(prev => ({
+      ...prev,
+      settings: { ...prev.settings, resorts: prev.settings.resorts.filter(r => r.id !== id) },
+      skiDays: prev.skiDays.map(keepName),
+      archivedSeasons: prev.archivedSeasons.map(s => ({ ...s, days: s.days.map(keepName) }))
+    }));
+  };
+
+  const otherSeasonsHint = otherSeasons.length > 0 && (
+    <div className="bg-amber-50 border border-amber-100 p-5 rounded-[2rem] space-y-3">
+      <p className="text-xs font-bold text-amber-800 leading-relaxed">
+        Noch nicht archivierte Skitage aus anderen Saisons: {otherSeasons.map(s => `${s.label} (${s.count})`).join(', ')}. Sie zählen nicht zur Saison {currentSeasonLabel}.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {otherSeasons.map(s => (
+          <button key={s.label} onClick={() => archiveSeason(s.label)} className="bg-white text-amber-700 border border-amber-200 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95">
+            <Archive size={14} /> {s.label} archivieren
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-gray-900 pb-32 max-w-lg mx-auto shadow-2xl overflow-hidden relative">
@@ -184,7 +291,7 @@ const App: React.FC = () => {
             <p className="text-blue-500/60 font-black text-[10px] uppercase tracking-widest mt-1">Snowcard Tirol</p>
           </div>
         </div>
-        <button onClick={() => setIsAddingDay(true)} className="bg-blue-600 text-white p-4 rounded-2xl shadow-xl active:scale-95 flex items-center gap-2 font-black transition-all">
+        <button onClick={openAddDay} className="bg-blue-600 text-white p-4 rounded-2xl shadow-xl active:scale-95 flex items-center gap-2 font-black transition-all">
           <Plus size={20} />
           <span>Skitag</span>
         </button>
@@ -194,6 +301,8 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto p-6 space-y-6">
         {activeTab === 'dashboard' && (
           <>
+            {otherSeasonsHint}
+
             {/* Top Grid: Skitage & Ersparnis */}
             <div className="grid grid-cols-2 gap-4">
               <StatsCard 
@@ -271,7 +380,7 @@ const App: React.FC = () => {
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <BarChart3 size={14} /> Amortisation
               </h3>
-              <BreakEvenChart skiDays={state.skiDays} tiers={state.settings.snowcardTiers} />
+              <BreakEvenChart skiDays={seasonDays} tiers={state.settings.snowcardTiers} />
             </div>
 
             <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
@@ -293,7 +402,7 @@ const App: React.FC = () => {
                 <MapIcon size={14} /> Mein Tirol
               </h3>
               <div className="rounded-[2.5rem] overflow-hidden shadow-inner border border-blue-100">
-                <TirolMap resorts={state.settings.resorts} skiDays={state.skiDays} />
+                <TirolMap resorts={state.settings.resorts} skiDays={seasonDays} />
               </div>
             </div>
 
@@ -306,7 +415,7 @@ const App: React.FC = () => {
               <button onClick={() => setShowRecap(true)} className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-5 rounded-[2rem] font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 shadow-xl transition-all active:scale-95">
                 <Share2 size={16} /> Saison Rückblick
               </button>
-              <button onClick={archiveCurrentSeason} className="w-full py-5 rounded-[2rem] border-2 border-dashed border-gray-200 text-gray-400 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-white hover:text-blue-500">
+              <button onClick={() => archiveSeason(currentSeasonLabel)} className="w-full py-5 rounded-[2rem] border-2 border-dashed border-gray-200 text-gray-400 font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-white hover:text-blue-500">
                 <Archive size={16} /> Saison archivieren
               </button>
             </div>
@@ -319,21 +428,22 @@ const App: React.FC = () => {
                 <h2 className="text-2xl font-black text-blue-900">Logbuch</h2>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">Saison {currentSeasonLabel}</p>
              </div>
+             {otherSeasonsHint}
              <div className="space-y-3">
-               {[...state.skiDays].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(day => {
-                 const resort = state.settings.resorts.find(r => r.id === day.resortId);
+               {[...seasonDays].sort((a,b) => b.date.localeCompare(a.date)).map(day => {
                  return (
                    <div key={day.id} className="bg-white p-4 rounded-[2rem] flex justify-between items-center shadow-sm transition-all hover:shadow-md">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-600 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black">
-                          <span className="text-[9px] opacity-60 uppercase">{new Date(day.date).toLocaleDateString('de-DE', { month: 'short' })}</span>
+                      <button onClick={() => openEditDay(day)} className="flex items-center gap-3 text-left">
+                        <div className="bg-blue-600 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-black shrink-0">
+                          <span className="text-[9px] opacity-60 uppercase">{parseLocalDate(day.date).toLocaleDateString('de-DE', { month: 'short' })}</span>
                           <span className="text-lg">{day.date.split('-')[2]}</span>
                         </div>
-                        <div className="font-black text-gray-800 text-sm">{resort?.name || 'Unbekannt'}</div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-blue-600 text-lg">{day.priceAtTime.toFixed(0)}€</span>
-                        <button onClick={() => deleteSkiDay(day.id)} className="text-gray-200 hover:text-red-500 p-2 transition-colors"><Trash2 size={18} /></button>
+                        <div className="font-black text-gray-800 text-sm">{resortNameOf(day)}</div>
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <span className="font-black text-blue-600 text-lg mr-2">{day.priceAtTime.toFixed(0)}€</span>
+                        <button onClick={() => openEditDay(day)} aria-label="Skitag bearbeiten" className="text-gray-300 hover:text-blue-500 p-2 transition-colors"><Pencil size={16} /></button>
+                        <button onClick={() => deleteSkiDay(day.id)} aria-label="Skitag löschen" className="text-gray-200 hover:text-red-500 p-2 transition-colors"><Trash2 size={18} /></button>
                       </div>
                    </div>
                  );
@@ -359,7 +469,7 @@ const App: React.FC = () => {
                       <input type="number" step="0.5" value={resort.dailyPrice} onChange={(e) => updateResortPrice(resort.id, Number(e.target.value))} className="w-20 text-right font-black text-blue-600 bg-blue-50/50 rounded-xl p-2 outline-none focus:ring-2 focus:ring-blue-200" />
                       <span className="absolute right-1 bottom-1 text-[8px] font-black text-blue-300">€</span>
                     </div>
-                    <button onClick={() => deleteResort(resort.id)} className="text-gray-200 hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16} /></button>
+                    <button onClick={() => deleteResort(resort.id)} aria-label="Gebiet löschen" className="text-gray-300 hover:text-red-400 p-2 transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </div>
               ))}
@@ -394,7 +504,7 @@ const App: React.FC = () => {
       {/* Recap Modal */}
       {showRecap && (
         <SeasonRecap 
-          days={state.skiDays} 
+          days={seasonDays} 
           resorts={state.settings.resorts} 
           seasonLabel={currentSeasonLabel} 
           savings={breakEvenStatus.isProfitable ? breakEvenStatus.savings : 0} 
@@ -409,8 +519,8 @@ const App: React.FC = () => {
         <div className="fixed inset-0 bg-blue-950/60 backdrop-blur-md flex items-end justify-center z-50 p-4">
           <div className="bg-white w-full max-w-lg rounded-[3rem] p-10 space-y-8 shadow-2xl relative mb-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-3xl font-black text-blue-900">Neuer Tag</h3>
-              <button onClick={() => setIsAddingDay(false)} className="bg-gray-100 p-3 rounded-2xl text-gray-400 hover:text-gray-600 transition-all"><Plus size={24} className="rotate-45" /></button>
+              <h3 className="text-3xl font-black text-blue-900">{editingDay ? 'Tag bearbeiten' : 'Neuer Tag'}</h3>
+              <button onClick={closeDayModal} className="bg-gray-100 p-3 rounded-2xl text-gray-400 hover:text-gray-600 transition-all"><Plus size={24} className="rotate-45" /></button>
             </div>
             <div className="space-y-6">
                 <div className="space-y-2">
@@ -420,13 +530,30 @@ const App: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Skigebiet</label>
                   <select value={selectedResortId} onChange={(e) => setSelectedResortId(e.target.value)} className="w-full p-6 bg-blue-50/50 rounded-[2rem] font-black text-xl text-blue-900 appearance-none outline-none focus:ring-4 focus:ring-blue-100 transition-all">
+                      {editingDay && !state.settings.resorts.some(r => r.id === editingDay.resortId) && (
+                        <option value={editingDay.resortId}>{editingDay.resortName ?? 'Unbekannt'} (gelöscht)</option>
+                      )}
                       {sortedResorts.map(r => (
                         <option key={r.id} value={r.id}>{r.name} • {r.dailyPrice.toFixed(0)}€</option>
                       ))}
                   </select>
                 </div>
+                {editingDay && (
+                  <div className="p-5 bg-blue-50/50 rounded-[2rem] space-y-3">
+                    <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <span>Gespeicherter Preis</span>
+                      <span className="text-blue-600 text-sm">{editingDay.priceAtTime.toFixed(2)}€</span>
+                    </div>
+                    {selectedResort && (
+                      <label className="flex items-center gap-3 text-sm font-bold text-blue-900">
+                        <input type="checkbox" checked={applyCurrentPrice} onChange={(e) => setApplyCurrentPrice(e.target.checked)} className="w-5 h-5 accent-blue-600" />
+                        Aktuellen Gebietspreis übernehmen ({selectedResort.dailyPrice.toFixed(2)}€)
+                      </label>
+                    )}
+                  </div>
+                )}
             </div>
-            <button onClick={addSkiDay} className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-95">SPEICHERN <Check size={24} /></button>
+            <button onClick={saveSkiDay} className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-95">SPEICHERN <Check size={24} /></button>
           </div>
         </div>
       )}

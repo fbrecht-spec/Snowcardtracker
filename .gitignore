@@ -25,3 +25,6 @@ dist-ssr
 
 # Umgebungsvariablen / Geheimnisse
 .env*
+
+# Lokale Claude-Code-Konfiguration
+.claude/

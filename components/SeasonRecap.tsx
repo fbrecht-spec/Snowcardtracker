@@ -20,7 +20,7 @@ export const SeasonRecap: React.FC<SeasonRecapProps> = ({ days, resorts, seasonL
   }, {});
 
   const topResort = Object.entries(topResortId).sort((a,b) => b[1] - a[1])[0];
-  const resortName = resorts.find(r => r.id === topResort?.[0])?.name || 'Unbekannt';
+  const resortName = resorts.find(r => r.id === topResort?.[0])?.name || days.find(d => d.resortId === topResort?.[0])?.resortName || 'Unbekannt';
 
   return (
     <div className="fixed inset-0 bg-blue-950/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 overflow-y-auto">

@@ -30,10 +30,8 @@ const normalizeResort = (raw: unknown): Resort | null => {
   if (isNumber(raw.lat)) resort.lat = raw.lat;
   if (isNumber(raw.lng)) resort.lng = raw.lng;
   // Gletscher-Flag: vorhandenen Wert behalten, sonst aus INITIAL_RESORTS ergänzen.
-  // Selbst angelegte Gebiete ohne Flag werden einmalig anhand des Namens eingestuft.
   if (typeof raw.glacier === 'boolean') resort.glacier = raw.glacier;
-  else if (initial) resort.glacier = !!initial.glacier;
-  else resort.glacier = raw.name.toLowerCase().includes('gletscher');
+  else if (initial?.glacier) resort.glacier = true;
   return resort;
 };
 
