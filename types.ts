@@ -48,7 +48,10 @@ export interface AppSettings {
   resorts: Resort[];
 }
 
+export const STATE_VERSION = 4;
+
 export interface AppState {
+  version: typeof STATE_VERSION;
   settings: AppSettings;
   skiDays: SkiDay[];
   archivedSeasons: ArchivedSeason[];

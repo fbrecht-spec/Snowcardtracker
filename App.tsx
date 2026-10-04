@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check, Pencil } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check, Pencil, Download, Upload } from 'lucide-react';
 import { AppState, SkiDay, Resort, SnowcardTierKey, ArchivedSeason, Award } from './types';
-import { loadState, saveState } from './storage';
+import { loadState, saveState, createExportFile, parseImportFile } from './storage';
 import { todayLocal, getSeasonLabel, parseLocalDate } from './dateUtils';
 import { StatsCard } from './components/StatsCard';
 import { BreakEvenChart } from './components/BreakEvenChart';
@@ -85,6 +85,54 @@ const App: React.FC = () => {
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  // Browser bitten, den Speicher nicht automatisch zu leeren
+  useEffect(() => {
+    navigator.storage?.persist?.().catch(() => {});
+  }, []);
+
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  // Export: auf dem iPhone über das Teilen-Menü (z. B. „In Dateien sichern“), sonst als Download
+  const exportData = async () => {
+    const file = createExportFile(state, todayLocal());
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+        console.warn('Teilen fehlgeschlagen, nutze Download:', e);
+      }
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const importData = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const { state: imported, exportedAt } = parseImportFile(await file.text());
+      const exportedLabel = exportedAt ? ` vom ${new Date(exportedAt).toLocaleString('de-DE')}` : '';
+      const archivedDays = imported.archivedSeasons.reduce((sum, s) => sum + s.days.length, 0);
+      const message = `Backup${exportedLabel} importieren?\n\n`
+        + `${imported.skiDays.length} Skitage, ${imported.archivedSeasons.length} archivierte Saisons (${archivedDays} Tage), ${imported.settings.resorts.length} Gebiete.\n\n`
+        + 'Alle aktuellen Daten auf diesem Gerät werden überschrieben.';
+      if (!confirm(message)) return;
+      setState(imported);
+      alert('Import erfolgreich.');
+    } catch (err) {
+      alert(`Import fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
 
   const activePrice = useMemo(() => state.settings.snowcardTiers[state.settings.activeTier], [state.settings.snowcardTiers, state.settings.activeTier]);
   const totalSpent = useMemo(() => seasonDays.reduce((sum, day) => sum + day.priceAtTime, 0), [seasonDays]);
@@ -493,6 +541,19 @@ const App: React.FC = () => {
                    </div>
                 </div>
               ))}
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-black text-blue-900 px-2">Datensicherung</h2>
+              <p className="text-xs font-bold text-gray-400 px-2 leading-relaxed">Die Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup, z. B. über „In Dateien sichern“.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={exportData} className="bg-white text-blue-600 font-black p-5 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col items-center gap-2 transition-all active:scale-95">
+                  <Download size={22} /> <span className="text-xs uppercase tracking-widest">Exportieren</span>
+                </button>
+                <button onClick={() => importInputRef.current?.click()} className="bg-white text-blue-600 font-black p-5 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col items-center gap-2 transition-all active:scale-95">
+                  <Upload size={22} /> <span className="text-xs uppercase tracking-widest">Importieren</span>
+                </button>
+              </div>
+              <input ref={importInputRef} type="file" accept=".json,application/json" onChange={importData} className="hidden" />
             </div>
             <div className="pt-8">
               <button onClick={() => { if(confirm('Alle lokalen Daten löschen?')) { localStorage.clear(); window.location.reload(); }}} className="w-full text-red-400 font-black p-5 border-2 border-dashed border-red-100 rounded-[2rem] hover:bg-red-50 transition-all">App Werksreset</button>

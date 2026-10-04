@@ -1,7 +1,10 @@
-import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey } from './types';
+import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, STATE_VERSION } from './types';
 import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from './constants';
 
-export const STORAGE_KEY = 'snowcard_tracker_state_v3';
+export const STORAGE_KEY = 'snowcard_tracker_state_v4';
+// Alter Schlüssel (Schema ohne Versionsfeld). Bleibt nach der Migration als Sicherheitskopie liegen.
+const LEGACY_STORAGE_KEY = 'snowcard_tracker_state_v3';
+const EXPORT_APP_ID = 'flos-snowcard-tracker';
 
 const TIER_KEYS: SnowcardTierKey[] = ['normal', 'vorverkauf', 'ermassigt'];
 
@@ -10,6 +13,7 @@ const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.is
 const isDateString = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 export const createDefaultState = (): AppState => ({
+  version: STATE_VERSION,
   settings: {
     snowcardTiers: { ...DEFAULT_SNOWCARD_TIERS },
     activeTier: 'normal',
@@ -76,6 +80,7 @@ export const normalizeState = (raw: unknown): AppState => {
     : defaults.settings.resorts;
 
   return {
+    version: STATE_VERSION,
     settings: {
       snowcardTiers,
       activeTier: TIER_KEYS.includes(settings.activeTier) ? settings.activeTier : 'normal',
@@ -88,25 +93,66 @@ export const normalizeState = (raw: unknown): AppState => {
   };
 };
 
-/** Lädt den State. Bei defektem JSON wird der Rohwert unter einem Backup-Key gesichert und mit Defaults gestartet. */
-export const loadState = (): AppState => {
-  let saved: string | null = null;
+/**
+ * Migration auf die aktuelle Schemaversion.
+ * v3 (ohne Versionsfeld) → v4: Versionsfeld, Gletscher-Flags, Defaults für fehlende Felder.
+ * Das übernimmt normalizeState, das ohnehin jedes Feld prüft.
+ */
+const migrateState = (raw: unknown): AppState => {
+  if (isObject(raw) && isNumber(raw.version) && raw.version > STATE_VERSION) {
+    throw new Error(`Die Daten stammen aus einer neueren App-Version (Schema ${raw.version}).`);
+  }
+  return normalizeState(raw);
+};
+
+const readStoredState = (key: string): AppState | null => {
+  const saved = localStorage.getItem(key);
+  if (!saved) return null;
   try {
-    saved = localStorage.getItem(STORAGE_KEY);
+    return migrateState(JSON.parse(saved));
+  } catch (e) {
+    console.error('Gespeicherte Daten defekt, starte mit Defaults:', e);
+    try {
+      localStorage.setItem(`${key}_corrupt_backup_${Date.now()}`, saved);
+    } catch { /* Speicher voll o. ä. – nichts weiter möglich */ }
+    return createDefaultState();
+  }
+};
+
+/**
+ * Lädt den State aus localStorage, bei Bedarf migriert aus dem alten v3-Schlüssel.
+ * Bei defektem JSON wird der Rohwert unter einem Backup-Key gesichert und mit Defaults gestartet.
+ */
+export const loadState = (): AppState => {
+  try {
+    return readStoredState(STORAGE_KEY) ?? readStoredState(LEGACY_STORAGE_KEY) ?? createDefaultState();
   } catch (e) {
     console.error('localStorage nicht verfügbar:', e);
     return createDefaultState();
   }
-  if (!saved) return createDefaultState();
+};
+
+/** Export-Datei: gesamter State plus App-Kennung und Exportdatum. */
+export const createExportFile = (state: AppState, dateLabel: string): File => {
+  const payload = { app: EXPORT_APP_ID, exportedAt: new Date().toISOString(), ...state };
+  return new File([JSON.stringify(payload, null, 2)], `snowcard-tracker-backup-${dateLabel}.json`, { type: 'application/json' });
+};
+
+/** Prüft eine Import-Datei und liefert den migrierten State. Wirft einen Fehler mit lesbarer Meldung. */
+export const parseImportFile = (text: string): { state: AppState; exportedAt?: string } => {
+  let raw: unknown;
   try {
-    return normalizeState(JSON.parse(saved));
-  } catch (e) {
-    console.error('Gespeicherte Daten defekt, starte mit Defaults:', e);
-    try {
-      localStorage.setItem(`${STORAGE_KEY}_corrupt_backup_${Date.now()}`, saved);
-    } catch { /* Speicher voll o. ä. – nichts weiter möglich */ }
-    return createDefaultState();
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error('Die Datei ist kein gültiges JSON.');
   }
+  if (!isObject(raw) || !isObject(raw.settings) || !Array.isArray(raw.settings.resorts) || !Array.isArray(raw.skiDays)) {
+    throw new Error('Die Datei sieht nicht wie ein Snowcard-Tracker-Backup aus.');
+  }
+  return {
+    state: migrateState(raw),
+    exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : undefined
+  };
 };
 
 export const saveState = (state: AppState) => {
