@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Award, Zap, Mountain, Star, Calendar, X, Gift, TrendingUp } from 'lucide-react';
+import { Zap, Mountain, Star, Calendar, X, Gift, TrendingUp } from 'lucide-react';
 import { SkiDay, Resort } from '../types';
 
 interface SeasonRecapProps {
@@ -14,10 +14,10 @@ interface SeasonRecapProps {
 }
 
 export const SeasonRecap: React.FC<SeasonRecapProps> = ({ days, resorts, seasonLabel, savings, freeDays, totalValue, onClose }) => {
-  const topResortId = days.reduce((acc, curr) => {
+  const topResortId = days.reduce<Record<string, number>>((acc, curr) => {
     acc[curr.resortId] = (acc[curr.resortId] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
 
   const topResort = Object.entries(topResortId).sort((a,b) => b[1] - a[1])[0];
   const resortName = resorts.find(r => r.id === topResort?.[0])?.name || 'Unbekannt';

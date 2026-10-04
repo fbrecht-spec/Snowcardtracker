@@ -57,7 +57,7 @@ export const ResortUsageChart: React.FC<ResortUsageChartProps> = ({ data }) => {
             contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontWeight: 'bold' }}
           />
           <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Bar>

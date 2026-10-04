@@ -19,11 +19,11 @@ export const INITIAL_RESORTS: Resort[] = [
   { id: '15', name: 'Mayrhofen', dailyPrice: 79.00, lat: 47.16, lng: 11.86 },
   { id: '16', name: 'Schlick 2000', dailyPrice: 58.50, lat: 47.16, lng: 11.31 },
   { id: '17', name: 'Axamer Lizum', dailyPrice: 63.00, lat: 47.18, lng: 11.29 },
-  { id: '18', name: 'Hintertuxer Gletscher', dailyPrice: 79.00, lat: 47.06, lng: 11.67 },
+  { id: '18', name: 'Hintertuxer Gletscher', dailyPrice: 79.00, glacier: true, lat: 47.06, lng: 11.67 },
   { id: '19', name: 'Kühtai', dailyPrice: 62.00, lat: 47.21, lng: 11.02 },
-  { id: '20', name: 'Stubaier Gletscher', dailyPrice: 72.50, lat: 46.98, lng: 11.11 },
+  { id: '20', name: 'Stubaier Gletscher', dailyPrice: 72.50, glacier: true, lat: 46.98, lng: 11.11 },
   { id: '21', name: 'Zell am Ziller', dailyPrice: 79.00, lat: 47.23, lng: 11.88 },
-  { id: '22', name: 'Sölden', dailyPrice: 83.00, lat: 46.96, lng: 11.00 },
+  { id: '22', name: 'Sölden', dailyPrice: 83.00, glacier: true, lat: 46.96, lng: 11.00 },
   { id: '23', name: 'Obergurgl-Hochgurgl', dailyPrice: 79.00, lat: 46.87, lng: 11.02 }
 ];
 

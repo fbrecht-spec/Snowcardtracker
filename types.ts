@@ -3,7 +3,7 @@ export interface Resort {
   id: string;
   name: string;
   dailyPrice: number;
-  location?: string;
+  glacier?: boolean;
   lat?: number;
   lng?: number;
 }
@@ -13,6 +13,7 @@ export interface SkiDay {
   date: string;
   resortId: string;
   priceAtTime: number;
+  resortName?: string; // Sicherung des Namens, falls das Gebiet gelöscht wird
 }
 
 export interface ArchivedSeason {

@@ -14,10 +14,9 @@ import { SkiDay, SnowcardTiers } from '../types';
 interface BreakEvenChartProps {
   skiDays: SkiDay[];
   tiers: SnowcardTiers;
-  activeTier: string;
 }
 
-export const BreakEvenChart: React.FC<BreakEvenChartProps> = ({ skiDays, tiers, activeTier }) => {
+export const BreakEvenChart: React.FC<BreakEvenChartProps> = ({ skiDays, tiers }) => {
   const sortedDays = [...skiDays].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
   let cumulative = 0;

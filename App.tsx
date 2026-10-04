@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Award as AwardIcon, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check } from 'lucide-react';
-import { AppState, SkiDay, Resort, SnowcardTierKey, SnowcardTiers, ArchivedSeason, Award } from './types';
-import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from './constants';
+import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check } from 'lucide-react';
+import { AppState, SkiDay, Resort, SnowcardTierKey, ArchivedSeason, Award } from './types';
+import { loadState, saveState } from './storage';
 import { StatsCard } from './components/StatsCard';
 import { BreakEvenChart } from './components/BreakEvenChart';
 import { ResortUsageChart } from './components/ResortUsageChart';
@@ -12,19 +12,7 @@ import { SeasonRecap } from './components/SeasonRecap';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'resorts' | 'settings'>('dashboard');
-  const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('snowcard_tracker_state_v3');
-    if (saved) return JSON.parse(saved);
-    return {
-      settings: {
-        snowcardTiers: DEFAULT_SNOWCARD_TIERS,
-        activeTier: 'normal',
-        resorts: INITIAL_RESORTS
-      },
-      skiDays: [],
-      archivedSeasons: []
-    };
-  });
+  const [state, setState] = useState<AppState>(loadState);
 
   const [isAddingDay, setIsAddingDay] = useState(false);
   const [isAddingResort, setIsAddingResort] = useState(false);
@@ -58,7 +46,7 @@ const App: React.FC = () => {
     const daysCount = state.skiDays.length;
     const hasGlacier = state.skiDays.some(d => {
       const r = state.settings.resorts.find(res => res.id === d.resortId);
-      return r?.name.toLowerCase().includes('gletscher');
+      return r?.glacier === true;
     });
 
     const allAwards: Award[] = [
@@ -71,7 +59,7 @@ const App: React.FC = () => {
       { id: '35', title: 'Schnee-Süchtiger', description: '35 Tage! Wahnsinn', icon: 'Zap', isUnlocked: daysCount >= 35, progress: daysCount, target: 35 },
       { id: '40', title: 'Tirol Legende', description: 'Extremer Winter: 40 Tage!', icon: 'Crown', isUnlocked: daysCount >= 40, progress: daysCount, target: 40 },
       { id: 'hopper', title: 'Resort Hopper', description: 'Besuche 5 Gebiete', icon: 'Map', isUnlocked: visitedCount >= 5, progress: visitedCount, target: 5 },
-      { id: 'glacier', title: 'Gletscher-König', description: 'Skifahren auf über 3000m', icon: 'Mountain', isUnlocked: hasGlacier }
+      { id: 'glacier', title: 'Gletscher-König', description: 'Ein Skitag in einem Gletscherskigebiet', icon: 'Mountain', isUnlocked: hasGlacier }
     ];
 
     return allAwards.sort((a, b) => {
@@ -84,7 +72,7 @@ const App: React.FC = () => {
   }, [state.skiDays, state.settings.resorts]);
 
   useEffect(() => {
-    localStorage.setItem('snowcard_tracker_state_v3', JSON.stringify(state));
+    saveState(state);
   }, [state]);
 
   const activePrice = useMemo(() => state.settings.snowcardTiers[state.settings.activeTier], [state.settings.snowcardTiers, state.settings.activeTier]);
@@ -283,7 +271,7 @@ const App: React.FC = () => {
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <BarChart3 size={14} /> Amortisation
               </h3>
-              <BreakEvenChart skiDays={state.skiDays} tiers={state.settings.snowcardTiers} activeTier={state.settings.activeTier} />
+              <BreakEvenChart skiDays={state.skiDays} tiers={state.settings.snowcardTiers} />
             </div>
 
             <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100">
