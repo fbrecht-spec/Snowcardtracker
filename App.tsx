@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Settings, History, LayoutDashboard, Search, Trash2, RefreshCw, Euro, Calendar, Archive, Award as AwardIcon, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check } from 'lucide-react';
+import { Plus, Settings, History, LayoutDashboard, Search, Trash2, Euro, Calendar, Archive, Award as AwardIcon, Map as MapIcon, CloudSnow, Share2, TrendingDown, Target, TrendingUp, Gift, BarChart3, PlusCircle, Check } from 'lucide-react';
 import { AppState, SkiDay, Resort, SnowcardTierKey, SnowcardTiers, ArchivedSeason, Award } from './types';
 import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from './constants';
 import { StatsCard } from './components/StatsCard';
@@ -9,7 +9,6 @@ import { MonthlyUsageChart } from './components/MonthlyUsageChart';
 import { AwardsGrid } from './components/AwardsGrid';
 import { TirolMap } from './components/TirolMap';
 import { SeasonRecap } from './components/SeasonRecap';
-import { fetchLatestResortPrice } from './services/geminiService';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'resorts' | 'settings'>('dashboard');
@@ -34,7 +33,6 @@ const App: React.FC = () => {
   const [showRecap, setShowRecap] = useState(false);
   const [newDayDate, setNewDayDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedResortId, setSelectedResortId] = useState('');
-  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
 
   const getSeasonLabel = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -182,17 +180,6 @@ const App: React.FC = () => {
   const setActiveTier = (tier: SnowcardTierKey) => setState(prev => ({ ...prev, settings: { ...prev.settings, activeTier: tier } }));
   const updateResortPrice = (id: string, price: number) => setState(prev => ({ ...prev, settings: { ...prev.settings, resorts: prev.settings.resorts.map(r => r.id === id ? { ...r, dailyPrice: price } : r) } }));
   const deleteResort = (id: string) => { if (confirm('Wirklich löschen?')) setState(prev => ({ ...prev, settings: { ...prev.settings, resorts: prev.settings.resorts.filter(r => r.id !== id) } })); };
-
-  const autoFetchPrices = async () => {
-    setIsUpdatingPrices(true);
-    const updatedResorts = [...state.settings.resorts];
-    for (let i = 0; i < updatedResorts.length; i++) {
-      const price = await fetchLatestResortPrice(updatedResorts[i].name);
-      if (price) updatedResorts[i].dailyPrice = price;
-    }
-    setState(prev => ({ ...prev, settings: { ...prev.settings, resorts: updatedResorts } }));
-    setIsUpdatingPrices(false);
-  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans text-gray-900 pb-32 max-w-lg mx-auto shadow-2xl overflow-hidden relative">
@@ -372,9 +359,6 @@ const App: React.FC = () => {
             <div className="px-2 flex justify-between items-center">
               <h2 className="text-2xl font-black text-blue-900">Skigebiete</h2>
               <div className="flex gap-2">
-                <button onClick={autoFetchPrices} disabled={isUpdatingPrices} className="p-2.5 text-blue-600 bg-blue-50 rounded-2xl transition-all">
-                  <RefreshCw size={22} className={isUpdatingPrices ? 'animate-spin' : ''} />
-                </button>
                 <button onClick={() => setIsAddingResort(true)} className="p-2.5 text-blue-600 bg-blue-50 rounded-2xl transition-all"><PlusCircle size={22} /></button>
               </div>
             </div>

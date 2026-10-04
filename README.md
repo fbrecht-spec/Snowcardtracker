@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Flo's Snowcard Tracker
 
-# Run and deploy your AI Studio app
+Kleine Web-App (PWA) zum Erfassen meiner Skitage in Tirol. Sie vergleicht den Preis der
+Snowcard Tirol (drei Tarife) mit der Summe der Tageskartenpreise und zeigt den Break-even.
 
-This contains everything you need to run your app locally.
+- React 19, TypeScript, Vite, Tailwind CSS
+- Kein Backend, keine KI. Alle Daten bleiben im `localStorage` des Geräts.
+- Datensicherung über Export/Import (JSON) in den Optionen.
 
-View your app in AI Studio: https://ai.studio/apps/27f5b126-64f4-4993-9916-f21441292964
+## Entwicklung
 
-## Run Locally
+Voraussetzung: Node.js (LTS).
 
-**Prerequisites:**  Node.js
+```bash
+npm install     # Abhängigkeiten installieren
+npm run dev     # Entwicklungsserver auf http://localhost:3000/Snowcardtracker/
+npm run build   # Produktions-Build nach dist/
+npm run preview # Build lokal testen auf http://localhost:4173/Snowcardtracker/
+```
 
+## Deployment
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Jeder Push auf `main` baut die App per GitHub Actions (`.github/workflows/deploy.yml`) und
+veröffentlicht sie auf GitHub Pages:
+
+https://fbrecht-spec.github.io/Snowcardtracker/
+
+Einmalig nötig: im Repo unter **Settings → Pages → Source** „GitHub Actions“ auswählen.
+Details siehe [DEPLOYMENT.md](DEPLOYMENT.md).

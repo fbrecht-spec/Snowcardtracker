@@ -1,8 +1,0 @@
-{
-  "name": "Flo's Snowcard Tracker",
-  "description": "Premium Ski Tracker für Tirol mit AI Schneeberichten, Awards und Season Recap.",
-  "requestFramePermissions": [
-    "geolocation"
-  ],
-  "majorCapabilities": []
-}
