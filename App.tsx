@@ -9,6 +9,8 @@ import { Toast, ToastData } from './components/ui/Feedback';
 import { DaySheet } from './components/DaySheet';
 import { ResortSheet } from './components/ResortSheet';
 import { SeasonRecap } from './components/SeasonRecap';
+import { RecapData } from './lib/recapImage';
+import { companionRanking } from './lib/dayMeta';
 import { OverviewView } from './views/OverviewView';
 import { LogbookView } from './views/LogbookView';
 import { ResortsView } from './views/ResortsView';
@@ -60,13 +62,23 @@ const App: React.FC = () => {
     if (result !== 'cancelled') notify(result === 'shared' ? 'Backup gesichert' : 'Backup heruntergeladen');
   };
 
-  const favorite = useMemo(() => {
+  // Daten für den Saison-Rückblick (Karte und teilbares Bild)
+  const recapData = useMemo<RecapData>(() => {
+    const { seasonDays } = app;
     const counts: Record<string, number> = {};
-    app.seasonDays.forEach(d => { counts[d.resortId] = (counts[d.resortId] || 0) + 1; });
+    seasonDays.forEach(d => { counts[d.resortId] = (counts[d.resortId] || 0) + 1; });
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    if (!top) return undefined;
-    const day = app.seasonDays.find(d => d.resortId === top[0])!;
-    return { name: app.resortNameOf(day), count: top[1] };
+    const topDay = top && seasonDays.find(d => d.resortId === top[0]);
+    const [buddy] = companionRanking(seasonDays);
+    const rated = seasonDays.filter(d => d.rating);
+    return {
+      seasonLabel: app.currentSeasonLabel,
+      stats: app.seasonStats,
+      favorite: topDay ? { name: app.resortNameOf(topDay), count: top[1] } : undefined,
+      buddy: buddy ? { name: buddy[0], count: buddy[1] } : undefined,
+      powderDays: seasonDays.filter(d => d.snow === 'pulver').length,
+      avgRating: rated.length ? rated.reduce((s, d) => s + d.rating!, 0) / rated.length : 0,
+    };
   }, [app]);
 
   const views: Record<Tab, React.ReactNode> = {
@@ -123,10 +135,9 @@ const App: React.FC = () => {
 
       <SeasonRecap
         open={showRecap}
-        seasonLabel={app.currentSeasonLabel}
-        stats={app.seasonStats}
-        favorite={favorite}
+        data={recapData}
         onClose={() => setShowRecap(false)}
+        onShared={result => notify(result === 'shared' ? 'Rückblick geteilt' : 'Bild heruntergeladen')}
       />
 
       <Toast toast={toast} onDismiss={dismissToast} />
