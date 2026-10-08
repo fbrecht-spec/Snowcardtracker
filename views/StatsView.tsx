@@ -4,6 +4,7 @@ import { Page } from '../components/ui/Page';
 import { Card, EmptyState } from '../components/ui/Feedback';
 import { BreakEvenChart, MonthlyChart, RankingBars, SeasonComparison, SeasonSummary } from '../components/Charts';
 import { AwardsGrid } from '../components/AwardsGrid';
+import { CompanionsCard, ConditionsCard } from '../components/DayInsights';
 import { Snowcard } from '../lib/useSnowcard';
 import { computeAwards, computeSeasonStats } from '../lib/stats';
 import { shortSeasonLabel } from '../lib/format';
@@ -71,8 +72,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ app, onShowRecap }) => {
           <Card title="Lieblingsgebiete">
             <RankingBars items={ranking} unit="×" />
           </Card>
+
+          <ConditionsCard days={seasonDays} />
         </>
       )}
+
+      <CompanionsCard seasonDays={seasonDays} allDays={[...state.skiDays, ...state.archivedSeasons.flatMap(s => s.days)]} />
 
       {seasons.length > 1 && (
         <Card title="Saisonvergleich" trailing={<span className="text-[13px] text-secondary">Tage · Bilanz</span>}>

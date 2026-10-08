@@ -2,6 +2,7 @@ import React from 'react';
 import { Snowflake } from 'lucide-react';
 import { SkiDay } from '../types';
 import { formatDate, formatPrice } from '../lib/format';
+import { dayDetailsLine } from '../lib/dayMeta';
 
 interface DayRowProps {
   day: SkiDay;
@@ -21,13 +22,16 @@ export const DayRow: React.FC<DayRowProps> = ({ day, resortName, glacier, onClic
         <span className="text-[19px] font-semibold tabular-nums mt-0.5">{Number(day.date.split('-')[2])}</span>
       </div>
     </div>
-    <div className="flex-1 min-w-0 flex items-center gap-3 min-h-[60px] pl-3 pr-4 border-b-[0.5px] border-separator group-last:border-b-0">
+    <div className="flex-1 min-w-0 flex items-center gap-3 min-h-[60px] py-2 pl-3 pr-4 border-b-[0.5px] border-separator group-last:border-b-0">
       <div className="flex-1 min-w-0">
         <div className="text-[17px] leading-[22px] flex items-center gap-1.5 min-w-0">
           <span className="truncate">{resortName}</span>
           {glacier && <Snowflake size={13} className="text-teal shrink-0" aria-label="Gletscher" />}
         </div>
-        <div className="text-[13px] text-secondary">{formatDate(day.date, { weekday: 'long' })}</div>
+        <div className="text-[13px] text-secondary truncate">
+          {[formatDate(day.date, { weekday: 'long' }), dayDetailsLine(day)].filter(Boolean).join(' · ')}
+        </div>
+        {day.note && <div className="text-[13px] text-secondary/80 italic truncate">„{day.note}“</div>}
       </div>
       <div className="text-[17px] text-secondary tabular-nums">{formatPrice(day.priceAtTime)}</div>
     </div>

@@ -4,7 +4,8 @@ import { Sheet } from './ui/Sheet';
 import { ListGroup, ListRow } from './ui/List';
 import { Switch } from './ui/Controls';
 import { SkiDay } from '../types';
-import { Snowcard } from '../lib/useSnowcard';
+import { DayDetails, Snowcard } from '../lib/useSnowcard';
+import { DayDetailsEditor } from './DayDetailsEditor';
 import { todayLocal } from '../lib/dateUtils';
 import { formatEuro } from '../lib/format';
 
@@ -22,6 +23,7 @@ export const DaySheet: React.FC<DaySheetProps> = ({ open, day, app, onClose, onS
   const [date, setDate] = useState(todayLocal());
   const [resortId, setResortId] = useState('');
   const [applyCurrentPrice, setApplyCurrentPrice] = useState(false);
+  const [details, setDetails] = useState<DayDetails>({});
 
   // Beim Öffnen vorbelegen: bestehender Tag oder heute + zuletzt genutztes Gebiet
   useEffect(() => {
@@ -29,11 +31,13 @@ export const DaySheet: React.FC<DaySheetProps> = ({ open, day, app, onClose, onS
     if (day) {
       setDate(day.date);
       setResortId(day.resortId);
+      setDetails({ snow: day.snow, weather: day.weather, rating: day.rating, companions: day.companions, note: day.note });
     } else {
       const last = [...state.skiDays].sort((a, b) => b.date.localeCompare(a.date))[0];
       const lastValid = last && sortedResorts.some(r => r.id === last.resortId) ? last.resortId : undefined;
       setDate(todayLocal());
       setResortId(lastValid ?? sortedResorts[0]?.id ?? '');
+      setDetails({});
     }
     setApplyCurrentPrice(false);
   }, [open, day?.id]);
@@ -44,7 +48,7 @@ export const DaySheet: React.FC<DaySheetProps> = ({ open, day, app, onClose, onS
   const price = day && !applyCurrentPrice ? day.priceAtTime : resort?.dailyPrice ?? 0;
 
   const save = () => {
-    const result = app.saveDay({ id: day?.id, date, resortId, applyCurrentPrice });
+    const result = app.saveDay({ id: day?.id, date, resortId, applyCurrentPrice, ...details });
     if (result.saved) onSaved({ reachedBreakEven: result.reachedBreakEven, isNew: !day });
   };
 
@@ -103,6 +107,8 @@ export const DaySheet: React.FC<DaySheetProps> = ({ open, day, app, onClose, onS
           />
         </ListGroup>
       )}
+
+      <DayDetailsEditor value={details} onChange={setDetails} suggestions={app.knownCompanions} />
 
       {day && (
         <ListGroup>
