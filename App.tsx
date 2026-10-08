@@ -55,6 +55,11 @@ const App: React.FC = () => {
     notify(`${app.resortNameOf(day)} gelöscht`, { label: 'Rückgängig', onClick: () => app.restoreDay(day) });
   };
 
+  const backup = async () => {
+    const result = await app.backupNow();
+    if (result !== 'cancelled') notify(result === 'shared' ? 'Backup gesichert' : 'Backup heruntergeladen');
+  };
+
   const favorite = useMemo(() => {
     const counts: Record<string, number> = {};
     app.seasonDays.forEach(d => { counts[d.resortId] = (counts[d.resortId] || 0) + 1; });
@@ -65,7 +70,7 @@ const App: React.FC = () => {
   }, [app]);
 
   const views: Record<Tab, React.ReactNode> = {
-    overview: <OverviewView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onShowLogbook={() => setTab('logbook')} />,
+    overview: <OverviewView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onShowLogbook={() => setTab('logbook')} onBackup={backup} />,
     logbook: <LogbookView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onDeleteDay={deleteDay} />,
     resorts: <ResortsView app={app} onOpenResort={resort => setResortSheet({ open: true, resort })} />,
     stats: <StatsView app={app} onShowRecap={() => setShowRecap(true)} />,

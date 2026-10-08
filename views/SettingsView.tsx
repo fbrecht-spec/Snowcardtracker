@@ -4,10 +4,12 @@ import { Page } from '../components/ui/Page';
 import { IconBadge, ListGroup, ListRow } from '../components/ui/List';
 import { TIER_INFO } from '../constants';
 import { Snowcard } from '../lib/useSnowcard';
-import { createExportFile, parseImportFile } from '../lib/storage';
-import { todayLocal } from '../lib/dateUtils';
+import { parseImportFile } from '../lib/storage';
+import { daysSinceBackup } from '../lib/backup';
 import { haptic } from '../lib/feedback';
 
+const backupLabel = (days?: number) =>
+  days === undefined ? 'Noch nie gesichert' : days === 0 ? 'Zuletzt heute gesichert' : days === 1 ? 'Zuletzt gestern gesichert' : `Zuletzt vor ${days} Tagen gesichert`;
 
 interface SettingsViewProps {
   app: Snowcard;
@@ -23,27 +25,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ app, notify }) => {
     navigator.storage?.persisted?.().then(setPersisted).catch(() => setPersisted(null));
   }, []);
 
-  // Export: auf dem iPhone über das Teilen-Menü (z. B. „In Dateien sichern“), sonst als Download
   const exportData = async () => {
-    const file = createExportFile(state, todayLocal());
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] });
-        return;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') return;
-        console.warn('Teilen fehlgeschlagen, nutze Download:', e);
-      }
-    }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    notify('Backup heruntergeladen');
+    const result = await app.backupNow();
+    if (result === 'downloaded') notify('Backup heruntergeladen');
+    if (result === 'shared') notify('Backup gesichert');
   };
 
   const importData = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +89,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ app, notify }) => {
         header="Datensicherung"
         footer="Deine Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup, z. B. über „In Dateien sichern“."
       >
-        <ListRow title="Backup exportieren" leading={<IconBadge icon={Download} className="bg-accent" />} chevron onClick={exportData} />
+        <ListRow
+          title="Backup exportieren"
+          subtitle={backupLabel(daysSinceBackup(state.lastBackupAt))}
+          leading={<IconBadge icon={Download} className="bg-accent" />}
+          chevron
+          onClick={exportData}
+        />
         <ListRow title="Backup importieren" leading={<IconBadge icon={Upload} className="bg-success" />} chevron onClick={() => importInputRef.current?.click()} />
         <ListRow
           title="Speicher"

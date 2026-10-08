@@ -1,4 +1,4 @@
-import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, STATE_VERSION } from '../types';
+import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, SnowQuality, STATE_VERSION, Weather } from '../types';
 import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS, LEGACY_SNOWCARD_TIERS, TIER_INFO } from '../constants';
 import { createId } from './id';
 
@@ -8,6 +8,8 @@ const LEGACY_STORAGE_KEY = 'snowcard_tracker_state_v3';
 const EXPORT_APP_ID = 'flos-snowcard-tracker';
 
 const TIER_KEYS: SnowcardTierKey[] = TIER_INFO.map(t => t.key);
+const SNOW: SnowQuality[] = ['pulver', 'firn', 'eis'];
+const WEATHER: Weather[] = ['sonne', 'wolkig', 'bedeckt', 'schnee', 'nebel'];
 
 const isObject = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -49,6 +51,14 @@ const normalizeSkiDay = (raw: unknown): SkiDay | null => {
     priceAtTime: isNumber(raw.priceAtTime) ? raw.priceAtTime : 0,
   };
   if (typeof raw.resortName === 'string') day.resortName = raw.resortName;
+  if (SNOW.includes(raw.snow)) day.snow = raw.snow;
+  if (WEATHER.includes(raw.weather)) day.weather = raw.weather;
+  if (isNumber(raw.rating) && raw.rating >= 1 && raw.rating <= 5) day.rating = Math.round(raw.rating);
+  if (Array.isArray(raw.companions)) {
+    const names = raw.companions.filter((n: unknown): n is string => typeof n === 'string' && n.trim() !== '').map((n: string) => n.trim());
+    if (names.length) day.companions = names;
+  }
+  if (typeof raw.note === 'string' && raw.note.trim()) day.note = raw.note;
   return day;
 };
 
@@ -95,6 +105,7 @@ export const normalizeState = (raw: unknown): AppState => {
     archivedSeasons: Array.isArray(raw.archivedSeasons)
       ? raw.archivedSeasons.map(normalizeArchivedSeason).filter((s): s is ArchivedSeason => s !== null)
       : [],
+    ...(typeof raw.lastBackupAt === 'string' && !Number.isNaN(Date.parse(raw.lastBackupAt)) ? { lastBackupAt: raw.lastBackupAt } : {}),
   };
 };
 

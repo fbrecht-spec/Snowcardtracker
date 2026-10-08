@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarDays, CloudSnow, Euro, Gift, Plus, TrendingDown, TriangleAlert } from 'lucide-react';
+import { CalendarDays, CloudSnow, Euro, Gift, HardDriveDownload, Plus, TrendingDown, TriangleAlert } from 'lucide-react';
 import { Page, NavButton } from '../components/ui/Page';
 import { ListGroup, ListRow } from '../components/ui/List';
 import { AnimatedNumber, ProgressRing } from '../components/ui/Controls';
@@ -9,6 +9,7 @@ import { SkiDay } from '../types';
 import { TIER_INFO } from '../constants';
 import { Snowcard } from '../lib/useSnowcard';
 import { estimateDaysToBreakEven } from '../lib/stats';
+import { BACKUP_REMINDER_DAYS, daysSinceBackup } from '../lib/backup';
 import { formatDayLong, formatEuro, shortSeasonLabel } from '../lib/format';
 
 
@@ -21,11 +22,15 @@ interface OverviewViewProps {
   onAddDay: () => void;
   onEditDay: (day: SkiDay) => void;
   onShowLogbook: () => void;
+  onBackup: () => void;
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEditDay, onShowLogbook }) => {
+export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEditDay, onShowLogbook, onBackup }) => {
   const { seasonStats: s, seasonDays, otherSeasons, currentSeasonLabel, state } = app;
   const daysLeft = estimateDaysToBreakEven(s, state.settings.resorts);
+  const hasData = state.skiDays.length + state.archivedSeasons.length > 0;
+  const backupAge = daysSinceBackup(state.lastBackupAt);
+  const backupDue = hasData && (backupAge === undefined || backupAge >= BACKUP_REMINDER_DAYS);
   const recent = [...seasonDays].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
 
   const tiles = [
@@ -41,6 +46,21 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEdi
       subtitle={`Saison ${shortSeasonLabel(currentSeasonLabel)} · ${TIER_INFO.find(t => t.key === state.settings.activeTier)?.label} ${formatEuro(s.snowcardPrice)}`}
       trailing={<NavButton onClick={onAddDay} label="Skitag hinzufügen"><Plus size={20} strokeWidth={2.5} /></NavButton>}
     >
+      {backupDue && (
+        <section className="bg-card rounded-[14px] p-4 flex gap-3">
+          <HardDriveDownload size={22} className="text-accent shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <div className="text-[15px] font-semibold">Zeit für ein Backup</div>
+            <p className="text-[13px] text-secondary mt-0.5">
+              {backupAge === undefined ? 'Du hast noch nie ein Backup gemacht.' : `Dein letztes Backup ist ${backupAge} Tage her.`} Deine Skitage liegen nur auf diesem iPhone.
+            </p>
+            <button onClick={onBackup} className="mt-3 h-8 px-3.5 rounded-full bg-accent text-white text-[13px] font-semibold active:opacity-70">
+              Jetzt sichern
+            </button>
+          </div>
+        </section>
+      )}
+
       {otherSeasons.length > 0 && (
         <section className="bg-card rounded-[14px] p-4 flex gap-3">
           <TriangleAlert size={22} className="text-warning shrink-0 mt-0.5" />

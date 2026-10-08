@@ -8,12 +8,20 @@ export interface Resort {
   lng?: number;
 }
 
+export type SnowQuality = 'pulver' | 'firn' | 'eis';
+export type Weather = 'sonne' | 'wolkig' | 'bedeckt' | 'schnee' | 'nebel';
+
 export interface SkiDay {
   id: string;
   date: string;
   resortId: string;
   priceAtTime: number;
   resortName?: string; // Sicherung des Namens, falls das Gebiet gelöscht wird
+  snow?: SnowQuality;
+  weather?: Weather;
+  rating?: number;        // 1–5 Sterne
+  companions?: string[];  // mit wem unterwegs
+  note?: string;
 }
 
 export interface ArchivedSeason {
@@ -56,4 +64,5 @@ export interface AppState {
   settings: AppSettings;
   skiDays: SkiDay[];
   archivedSeasons: ArchivedSeason[];
+  lastBackupAt?: string;  // ISO-Zeitpunkt des letzten erfolgreichen Exports
 }

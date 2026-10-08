@@ -5,13 +5,29 @@ import { loadState, saveState } from './storage';
 import { getSeasonLabel, todayLocal } from './dateUtils';
 import { computeSeasonStats } from './stats';
 import { formatDate } from './format';
+import { exportBackup } from './backup';
 
-export interface DayInput {
+/** Optionale Angaben zu einem Skitag */
+export type DayDetails = Pick<SkiDay, 'snow' | 'weather' | 'rating' | 'companions' | 'note'>;
+
+export interface DayInput extends DayDetails {
   id?: string;
   date: string;
   resortId: string;
   applyCurrentPrice: boolean;
 }
+
+/** Setzt die Detailfelder; leere Werte werden entfernt statt als undefined gespeichert. */
+const withDetails = (day: SkiDay, d: DayDetails): SkiDay => {
+  const { snow, weather, rating, companions, note, ...base } = day;
+  const next: SkiDay = { ...base };
+  if (d.snow) next.snow = d.snow;
+  if (d.weather) next.weather = d.weather;
+  if (d.rating) next.rating = d.rating;
+  if (d.companions?.length) next.companions = d.companions;
+  if (d.note?.trim()) next.note = d.note.trim();
+  return next;
+};
 
 export interface ResortVisits {
   season: number;
@@ -66,6 +82,20 @@ export const useSnowcard = () => {
     return visits;
   }, [allDays, currentSeasonLabel]);
 
+  /** Alle bisher genannten Begleiter, häufigste zuerst (für Vorschläge) */
+  const knownCompanions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allDays.forEach(d => d.companions?.forEach(n => { counts[n] = (counts[n] || 0) + 1; }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([name]) => name);
+  }, [allDays]);
+
+  /** Backup exportieren; bei Erfolg wird der Zeitpunkt für die Backup-Erinnerung gemerkt. */
+  const backupNow = async () => {
+    const result = await exportBackup(state);
+    if (result !== 'cancelled') setState(prev => ({ ...prev, lastBackupAt: new Date().toISOString() }));
+    return result;
+  };
+
   const resortNameOf = (day: SkiDay) => settings.resorts.find(r => r.id === day.resortId)?.name ?? day.resortName ?? 'Unbekannt';
 
   /** Speichert einen neuen oder bearbeiteten Skitag. Liefert, ob gespeichert wurde und ob damit der Break-even erreicht ist. */
@@ -95,6 +125,7 @@ export const useSnowcard = () => {
     } else {
       day = { id: createId(), date: input.date, resortId: input.resortId, priceAtTime: resort!.dailyPrice };
     }
+    day = withDetails(day, input);
     const nextDays = existing ? skiDays.map(d => (d.id === day.id ? day : d)) : [...skiDays, day];
     setState(prev => ({ ...prev, skiDays: nextDays }));
 
@@ -182,6 +213,8 @@ export const useSnowcard = () => {
     sortedResorts,
     visitsByResort,
     resortNameOf,
+    knownCompanions,
+    backupNow,
     saveDay,
     deleteDay,
     restoreDay,
