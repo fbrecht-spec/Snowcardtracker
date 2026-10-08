@@ -2,17 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, Download, HardDrive, Upload } from 'lucide-react';
 import { Page } from '../components/ui/Page';
 import { IconBadge, ListGroup, ListRow } from '../components/ui/List';
-import { SnowcardTierKey } from '../types';
+import { TIER_INFO } from '../constants';
 import { Snowcard } from '../lib/useSnowcard';
 import { createExportFile, parseImportFile } from '../lib/storage';
 import { todayLocal } from '../lib/dateUtils';
 import { haptic } from '../lib/feedback';
 
-const TIERS: { key: SnowcardTierKey; label: string }[] = [
-  { key: 'normal', label: 'Normal' },
-  { key: 'vorverkauf', label: 'Vorverkauf' },
-  { key: 'ermassigt', label: 'Ermäßigt' },
-];
 
 interface SettingsViewProps {
   app: Snowcard;
@@ -73,7 +68,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ app, notify }) => {
   return (
     <Page title="Einstellungen">
       <ListGroup header="Snowcard-Tarif" footer="Der gewählte Tarif ist die Grundlage für Break-even und Ersparnis. Preise sind antippbar.">
-        {TIERS.map(t => {
+        {TIER_INFO.map(t => {
           const active = state.settings.activeTier === t.key;
           // Auswahl-Knopf und Preisfeld nebeneinander (kein Eingabefeld innerhalb eines Buttons)
           return (

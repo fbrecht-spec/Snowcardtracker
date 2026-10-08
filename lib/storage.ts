@@ -1,12 +1,13 @@
 import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, STATE_VERSION } from '../types';
-import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from '../constants';
+import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS, LEGACY_SNOWCARD_TIERS, TIER_INFO } from '../constants';
+import { createId } from './id';
 
 export const STORAGE_KEY = 'snowcard_tracker_state_v4';
 // Alter Schlüssel (Schema ohne Versionsfeld). Bleibt nach der Migration als Sicherheitskopie liegen.
 const LEGACY_STORAGE_KEY = 'snowcard_tracker_state_v3';
 const EXPORT_APP_ID = 'flos-snowcard-tracker';
 
-const TIER_KEYS: SnowcardTierKey[] = ['normal', 'vorverkauf', 'ermassigt'];
+const TIER_KEYS: SnowcardTierKey[] = TIER_INFO.map(t => t.key);
 
 const isObject = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -42,7 +43,7 @@ const normalizeResort = (raw: unknown): Resort | null => {
 const normalizeSkiDay = (raw: unknown): SkiDay | null => {
   if (!isObject(raw) || !isDateString(raw.date) || typeof raw.resortId !== 'string') return null;
   const day: SkiDay = {
-    id: typeof raw.id === 'string' && raw.id ? raw.id : crypto.randomUUID(),
+    id: typeof raw.id === 'string' && raw.id ? raw.id : createId(),
     date: raw.date,
     resortId: raw.resortId,
     priceAtTime: isNumber(raw.priceAtTime) ? raw.priceAtTime : 0,
@@ -74,6 +75,10 @@ export const normalizeState = (raw: unknown): AppState => {
 
   const snowcardTiers = { ...defaults.settings.snowcardTiers };
   TIER_KEYS.forEach(k => { if (isNumber(rawTiers[k])) snowcardTiers[k] = rawTiers[k]; });
+  // v4 → v5: noch unveränderte alte Standardpreise durch die neuen ersetzen (eigene Preise bleiben)
+  if (!isNumber(raw.version) || raw.version < 5) {
+    TIER_KEYS.forEach(k => { if (rawTiers[k] === LEGACY_SNOWCARD_TIERS[k]) snowcardTiers[k] = DEFAULT_SNOWCARD_TIERS[k]; });
+  }
 
   const resorts = Array.isArray(settings.resorts)
     ? settings.resorts.map(normalizeResort).filter((r): r is Resort => r !== null)
@@ -96,6 +101,7 @@ export const normalizeState = (raw: unknown): AppState => {
 /**
  * Migration auf die aktuelle Schemaversion.
  * v3 (ohne Versionsfeld) → v4: Versionsfeld, Gletscher-Flags, Defaults für fehlende Felder.
+ * v4 → v5: vierter Tarif (Ermäßigt VVK), neue Standardpreise.
  * Das übernimmt normalizeState, das ohnehin jedes Feld prüft.
  */
 const migrateState = (raw: unknown): AppState => {

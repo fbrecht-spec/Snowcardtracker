@@ -1,5 +1,5 @@
 
-import { Resort, SnowcardTiers } from './types';
+import { Resort, SnowcardTierKey, SnowcardTiers } from './types';
 
 export const INITIAL_RESORTS: Resort[] = [
   { id: '1', name: 'Skiwelt Wilder Kaiser', dailyPrice: 76.00, lat: 47.51, lng: 12.23 },
@@ -28,7 +28,23 @@ export const INITIAL_RESORTS: Resort[] = [
 ];
 
 export const DEFAULT_SNOWCARD_TIERS: SnowcardTiers = {
+  normal: 1227,
+  vorverkauf: 1080,
+  ermassigt: 982,
+  ermassigtVvk: 658
+};
+
+// Vorbelegung bis Schema v4. Gespeicherte Preise, die noch genau diesen Werten entsprechen,
+// werden bei der Migration auf v5 durch die neuen Standardpreise ersetzt.
+export const LEGACY_SNOWCARD_TIERS: Partial<SnowcardTiers> = {
   normal: 1050,
   vorverkauf: 966,
   ermassigt: 840
 };
+
+export const TIER_INFO: { key: SnowcardTierKey; label: string; short: string; color: string }[] = [
+  { key: 'normal', label: 'Erwachsene', short: 'Erw.', color: 'danger' },
+  { key: 'vorverkauf', label: 'Erwachsene VVK', short: 'Erw. VVK', color: 'warning' },
+  { key: 'ermassigt', label: 'Ermäßigt', short: 'Erm.', color: 'success' },
+  { key: 'ermassigtVvk', label: 'Ermäßigt VVK', short: 'Erm. VVK', color: 'teal' },
+];

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createId } from '../lib/id';
 import { Sheet } from './ui/Sheet';
 import { ListGroup, ListRow } from './ui/List';
 import { Switch } from './ui/Controls';
@@ -32,7 +33,7 @@ export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, onC
 
   const save = () => {
     if (!valid) return;
-    app.saveResort({ ...(resort ?? { id: crypto.randomUUID() }), name: name.trim(), dailyPrice: parsedPrice, glacier });
+    app.saveResort({ ...(resort ?? { id: createId() }), name: name.trim(), dailyPrice: parsedPrice, glacier });
     onClose();
   };
 

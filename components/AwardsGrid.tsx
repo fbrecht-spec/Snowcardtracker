@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Award as AwardIcon, Crown, Lock, Map, Mountain, Star, Zap } from 'lucide-react';
+import { Award as AwardIcon, CalendarCheck, Coins, Compass, Crown, Flame, Gift, Heart, Lock, Map, Mountain, PiggyBank, Repeat, Star, Sun, Sunrise, Zap } from 'lucide-react';
 import { Award } from '../types';
 
-const ICONS = { Star, Crown, Zap, Map, Mountain, Award: AwardIcon };
+const ICONS = { Star, Crown, Zap, Map, Mountain, Award: AwardIcon, PiggyBank, Coins, Sunrise, Sun, Gift, Repeat, Flame, Compass, Heart, CalendarCheck };
 
 const COLORS: Record<string, string> = {
   Star: 'bg-warning',
@@ -12,6 +12,16 @@ const COLORS: Record<string, string> = {
   Map: 'bg-success',
   Mountain: 'bg-teal',
   Award: 'bg-accent',
+  PiggyBank: 'bg-success',
+  Coins: 'bg-warning',
+  Sunrise: 'bg-warning',
+  Sun: 'bg-warning',
+  Gift: 'bg-danger',
+  Repeat: 'bg-indigo',
+  Flame: 'bg-danger',
+  Compass: 'bg-teal',
+  Heart: 'bg-danger',
+  CalendarCheck: 'bg-indigo',
 };
 
 export const AwardsGrid: React.FC<{ awards: Award[] }> = ({ awards }) => {

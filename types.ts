@@ -38,6 +38,7 @@ export interface SnowcardTiers {
   normal: number;
   vorverkauf: number;
   ermassigt: number;
+  ermassigtVvk: number;
 }
 
 export type SnowcardTierKey = keyof SnowcardTiers;
@@ -48,7 +49,7 @@ export interface AppSettings {
   resorts: Resort[];
 }
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 export interface AppState {
   version: typeof STATE_VERSION;

@@ -58,7 +58,14 @@ export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, cancel, conf
               if (info.offset.y > 120 || info.velocity.y > 600) onClose();
             }}
           >
-            <div className="shrink-0 touch-none cursor-grab" onPointerDown={e => dragControls.start(e)}>
+            <div
+              className="shrink-0 touch-none cursor-grab"
+              onPointerDown={e => {
+                // Auf Knöpfen kein Wischen starten, sonst verschluckt iOS den Tipp
+                if ((e.target as HTMLElement).closest('button')) return;
+                dragControls.start(e);
+              }}
+            >
               <div className="mx-auto mt-1.5 h-[5px] w-9 rounded-full bg-tertiary" />
               <div className="h-12 px-4 grid grid-cols-[1fr_auto_1fr] items-center">
                 <div>

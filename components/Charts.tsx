@@ -2,17 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SkiDay, SnowcardTierKey, SnowcardTiers } from '../types';
+import { TIER_INFO } from '../constants';
 import { formatDayLong, formatEuro, formatPrice, formatSignedEuro } from '../lib/format';
 import { sortByDate } from '../lib/stats';
 import { haptic } from '../lib/feedback';
 
 const css = (token: string, alpha = 1) => `rgb(var(--${token}) / ${alpha})`;
 
-const TIER_LINES: { key: SnowcardTierKey; label: string; color: string }[] = [
-  { key: 'normal', label: 'Normal', color: 'danger' },
-  { key: 'vorverkauf', label: 'VVK', color: 'warning' },
-  { key: 'ermassigt', label: 'Ermäßigt', color: 'success' },
-];
+const TIER_LINES = TIER_INFO.map(t => ({ ...t, label: t.short }));
 
 interface BreakEvenChartProps {
   days: SkiDay[];
@@ -35,7 +32,7 @@ export const BreakEvenChart: React.FC<BreakEvenChartProps> = ({ days, tiers, act
   }, [days]);
 
   // Runde Obergrenze (volle 200 €), damit die Achse saubere Werte zeigt
-  const maxY = Math.ceil((Math.max(tiers.normal, data[data.length - 1].value) * 1.04) / 200) * 200;
+  const maxY = Math.ceil((Math.max(...Object.values(tiers), data[data.length - 1].value) * 1.04) / 200) * 200;
 
   return (
     <div className="select-none">

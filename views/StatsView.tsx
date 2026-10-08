@@ -40,7 +40,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ app, onShowRecap }) => {
     [currentSeasonLabel, seasonStats, state.archivedSeasons],
   );
 
-  const awards = useMemo(() => computeAwards(seasonDays, state.settings.resorts), [seasonDays, state.settings.resorts]);
+  const awards = useMemo(() => computeAwards(seasonDays, state.settings.resorts, seasonStats.snowcardPrice), [seasonDays, state.settings.resorts, seasonStats.snowcardPrice]);
   const unlocked = awards.filter(a => a.isUnlocked).length;
 
   return (

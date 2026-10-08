@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey } from '../types';
+import { createId } from './id';
 import { loadState, saveState } from './storage';
 import { getSeasonLabel, todayLocal } from './dateUtils';
 import { computeSeasonStats } from './stats';
@@ -92,7 +93,7 @@ export const useSnowcard = () => {
       };
       if (resort) delete day.resortName;
     } else {
-      day = { id: crypto.randomUUID(), date: input.date, resortId: input.resortId, priceAtTime: resort!.dailyPrice };
+      day = { id: createId(), date: input.date, resortId: input.resortId, priceAtTime: resort!.dailyPrice };
     }
     const nextDays = existing ? skiDays.map(d => (d.id === day.id ? day : d)) : [...skiDays, day];
     setState(prev => ({ ...prev, skiDays: nextDays }));

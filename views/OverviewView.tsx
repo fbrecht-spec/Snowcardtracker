@@ -6,11 +6,11 @@ import { AnimatedNumber, ProgressRing } from '../components/ui/Controls';
 import { EmptyState } from '../components/ui/Feedback';
 import { DayRow } from '../components/DayRow';
 import { SkiDay } from '../types';
+import { TIER_INFO } from '../constants';
 import { Snowcard } from '../lib/useSnowcard';
 import { estimateDaysToBreakEven } from '../lib/stats';
 import { formatDayLong, formatEuro, shortSeasonLabel } from '../lib/format';
 
-const TIER_NAMES = { normal: 'Normal', vorverkauf: 'Vorverkauf', ermassigt: 'Ermäßigt' };
 
 const euro = (n: number) => formatEuro(Math.round(n));
 const int = (n: number) => String(Math.round(n));
@@ -38,7 +38,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEdi
   return (
     <Page
       title="Übersicht"
-      subtitle={`Saison ${shortSeasonLabel(currentSeasonLabel)} · ${TIER_NAMES[state.settings.activeTier]} ${formatEuro(s.snowcardPrice)}`}
+      subtitle={`Saison ${shortSeasonLabel(currentSeasonLabel)} · ${TIER_INFO.find(t => t.key === state.settings.activeTier)?.label} ${formatEuro(s.snowcardPrice)}`}
       trailing={<NavButton onClick={onAddDay} label="Skitag hinzufügen"><Plus size={20} strokeWidth={2.5} /></NavButton>}
     >
       {otherSeasons.length > 0 && (
