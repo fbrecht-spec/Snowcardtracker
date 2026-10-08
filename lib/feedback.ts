@@ -27,9 +27,14 @@ export const haptic = () => {
   }
 };
 
+// Eigene Instanz ohne Web Worker: die Standardinstanz wirft im Worker-Modus nach einer
+// Fenstergrößenänderung (z. B. iPhone drehen) einen Fehler beim Neuberechnen der Canvas-Größe.
+let fire: confetti.CreateTypes | null = null;
+
 export const celebrate = () => {
+  fire ??= confetti.create(undefined, { resize: true, useWorker: false });
   const colors = ['#007AFF', '#34C759', '#5AC8FA', '#FFCC00', '#FFFFFF'];
-  const base = { particleCount: 70, spread: 70, startVelocity: 45, colors, disableForReducedMotion: true, zIndex: 200 };
-  confetti({ ...base, angle: 60, origin: { x: 0, y: 0.7 } });
-  confetti({ ...base, angle: 120, origin: { x: 1, y: 0.7 } });
+  const base = { particleCount: 70, spread: 70, startVelocity: 45, colors, disableForReducedMotion: true };
+  fire({ ...base, angle: 60, origin: { x: 0, y: 0.7 } });
+  fire({ ...base, angle: 120, origin: { x: 1, y: 0.7 } });
 };

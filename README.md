@@ -7,8 +7,12 @@ Snowcard Tirol (drei Tarife) mit der Summe der Tageskartenpreise und zeigt den B
 - iOS-nahes Design mit automatischem Hell-/Dunkelmodus
 - Übersicht mit Break-even-Ring, Logbuch mit Archiv, Gebiete mit Karte und Suche,
   Statistik mit interaktiven Diagrammen, Saisonvergleich und Erfolgen
-- Kein Backend, keine KI. Alle Daten bleiben im `localStorage` des Geräts.
-- Datensicherung über Export/Import (JSON) in den Optionen.
+- Kein Backend. Alle Daten bleiben im `localStorage` des Geräts.
+- Online-Zusatz: Wetter und Schneehöhe über [Open-Meteo](https://open-meteo.com/) (CC BY 4.0);
+  ohne Netz funktioniert alles andere weiter.
+- Hütten-Tipp: öffnet einen Prompt in Claude oder ChatGPT – die App selbst enthält keinen KI-Schlüssel.
+- Datensicherung über Export/Import (JSON) in den Einstellungen, Erinnerung nach 15 Tagen.
+- Kartengrenzen: Statistik Austria (CC BY 4.0), aufbereitet von Flooh Perlot.
 
 ## Projektstruktur
 
