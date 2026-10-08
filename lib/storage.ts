@@ -1,5 +1,5 @@
-import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, STATE_VERSION } from './types';
-import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from './constants';
+import { AppState, ArchivedSeason, Resort, SkiDay, SnowcardTierKey, STATE_VERSION } from '../types';
+import { INITIAL_RESORTS, DEFAULT_SNOWCARD_TIERS } from '../constants';
 
 export const STORAGE_KEY = 'snowcard_tracker_state_v4';
 // Alter Schlüssel (Schema ohne Versionsfeld). Bleibt nach der Migration als Sicherheitskopie liegen.

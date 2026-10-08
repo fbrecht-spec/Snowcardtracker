@@ -1,140 +1,84 @@
 import React from 'react';
-import { MapPin, Mountain as PeakIcon } from 'lucide-react';
-import { Resort, SkiDay } from '../types';
+import { motion } from 'motion/react';
+import { Resort } from '../types';
+import { haptic } from '../lib/feedback';
 
 interface TirolMapProps {
   resorts: Resort[];
-  skiDays: SkiDay[];
+  visits: Record<string, number>; // Besuche pro Gebiet (aktuelle Saison)
+  selectedId?: string;
+  onSelect: (id: string | undefined) => void;
 }
 
-export const TirolMap: React.FC<TirolMapProps> = ({ resorts, skiDays }) => {
-  const visitedResortIds = new Set(skiDays.map(d => d.resortId));
-  
-  // Tirol bounding box (roughly)
-  const minLat = 46.8;
-  const maxLat = 47.7;
-  const minLng = 10.1;
-  const maxLng = 12.9;
+// Grober Ausschnitt Tirol (stilisierte Karte, nicht maßstabsgetreu)
+const BOUNDS = { minLat: 46.8, maxLat: 47.7, minLng: 10.1, maxLng: 12.9 };
 
-  const getPos = (lat: number, lng: number) => {
-    const x = ((lng - minLng) / (maxLng - minLng)) * 100;
-    const y = 100 - ((lat - minLat) / (maxLat - minLat)) * 100;
-    return { x, y };
-  };
+const pos = (lat: number, lng: number) => ({
+  x: ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * 100,
+  y: 100 - ((lat - BOUNDS.minLat) / (BOUNDS.maxLat - BOUNDS.minLat)) * 100,
+});
 
-  // Major Cities Coordinates
-  const cities = [
-    { name: 'Innsbruck', lat: 47.26, lng: 11.40 },
-    { name: 'Kitzbühel', lat: 47.44, lng: 12.39 },
-    { name: 'Landeck', lat: 47.13, lng: 10.56 },
-    { name: 'Reutte', lat: 47.48, lng: 10.71 },
-    { name: 'Kufstein', lat: 47.58, lng: 12.17 },
-    { name: 'Lienz', lat: 46.83, lng: 12.77 }
-  ];
+const CITIES = [
+  { name: 'Innsbruck', lat: 47.26, lng: 11.4 },
+  { name: 'Kufstein', lat: 47.58, lng: 12.17 },
+  { name: 'Landeck', lat: 47.13, lng: 10.56 },
+  { name: 'Reutte', lat: 47.48, lng: 10.71 },
+  { name: 'Lienz', lat: 46.83, lng: 12.77 },
+];
 
-  // Mountain Peaks
-  const peaks = [
-    { name: 'Zugspitze', lat: 47.42, lng: 10.98 },
-    { name: 'Großglockner', lat: 47.07, lng: 12.70 },
-    { name: 'Wildspitze', lat: 46.88, lng: 10.87 }
-  ];
+export const TirolMap: React.FC<TirolMapProps> = ({ resorts, visits, selectedId, onSelect }) => (
+  <div
+    className="relative aspect-[2/1] overflow-hidden rounded-[14px] bg-gradient-to-br from-accent/[0.06] via-teal/[0.08] to-indigo/[0.06] dark:from-accent/[0.14] dark:via-teal/[0.1] dark:to-indigo/[0.14]"
+    onClick={() => onSelect(undefined)}
+  >
+    {/* Angedeutete Bergketten und der Inn */}
+    <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+      <path d="M0,50 L0,38 L8,30 L14,35 L22,26 L30,33 L38,24 L46,31 L55,22 L63,30 L72,21 L80,28 L88,20 L100,27 L100,50 Z" className="fill-label/[0.03]" />
+      <path d="M0,50 L0,44 L10,38 L18,42 L28,36 L36,41 L46,35 L56,40 L66,34 L76,39 L86,33 L100,38 L100,50 Z" className="fill-label/[0.03]" />
+      <path d="M5,42 Q20,38 35,32 L45,26 Q55,22 75,18 L95,12" fill="none" className="stroke-accent/30" strokeWidth="0.5" strokeLinecap="round" />
+    </svg>
 
-  return (
-    <div className="relative aspect-[2/1] bg-blue-50/40 rounded-[2.5rem] border border-blue-100 overflow-hidden group shadow-inner">
-      {/* Enhanced Tirol Background with Inn River */}
-      <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full">
-        {/* Main Shape */}
-        <path 
-          d="M5,25 Q15,10 30,15 T50,10 T70,20 T95,15 L95,45 Q80,48 60,40 T30,45 T5,40 Z" 
-          className="fill-blue-900/5 stroke-blue-200/30"
-          strokeWidth="0.5"
-        />
-        {/* Inn River - flowing through the main valley */}
-        <path 
-          d="M5,42 Q20,38 35,32 L45,26 Q55,22 75,18 L95,12" 
-          fill="none" 
-          className="stroke-blue-200/80" 
-          strokeWidth="0.6"
-          strokeDasharray="2,1"
-        />
-        {/* Drau River (East Tirol) */}
-        <path 
-          d="M85,45 L95,48" 
-          fill="none" 
-          className="stroke-blue-200/60" 
-          strokeWidth="0.4"
-        />
-      </svg>
-
-      {/* City Labels */}
-      {cities.map(city => {
-        const { x, y } = getPos(city.lat, city.lng);
-        return (
-          <div 
-            key={city.name}
-            className="absolute flex flex-col items-center pointer-events-none"
-            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-          >
-            <div className="w-1 h-1 bg-gray-500 rounded-full mb-0.5" />
-            <span className="text-[6px] font-black text-gray-500/70 uppercase tracking-tighter">{city.name}</span>
-          </div>
-        );
-      })}
-
-      {/* Mountain Peaks */}
-      {peaks.map(peak => {
-        const { x, y } = getPos(peak.lat, peak.lng);
-        return (
-          <div 
-            key={peak.name}
-            className="absolute flex items-center gap-0.5 pointer-events-none opacity-40"
-            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-          >
-            <PeakIcon size={6} className="text-gray-400" />
-            <span className="text-[5px] font-bold text-gray-400 italic">{peak.name}</span>
-          </div>
-        );
-      })}
-
-      {/* Resort Pins */}
-      {resorts.map(resort => {
-        if (!resort.lat || !resort.lng) return null;
-        const { x, y } = getPos(resort.lat, resort.lng);
-        const isVisited = visitedResortIds.has(resort.id);
-
-        return (
-          <div 
-            key={resort.id}
-            className="absolute transition-all duration-500 z-10"
-            style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-          >
-            <div className={`relative ${isVisited ? 'scale-110' : 'scale-50 opacity-30'} group/pin`}>
-              <MapPin 
-                size={isVisited ? 18 : 12} 
-                className={isVisited ? 'text-blue-600' : 'text-gray-400'} 
-                strokeWidth={isVisited ? 3 : 2}
-                fill={isVisited ? "white" : "none"}
-              />
-              {isVisited && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-1 opacity-0 group-hover/pin:opacity-100 transition-opacity whitespace-nowrap bg-blue-900 text-white text-[8px] font-black py-1 px-2 rounded-lg pointer-events-none z-20 shadow-xl">
-                  {resort.name}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      <div className="absolute bottom-4 left-6 flex items-center gap-4 bg-white/70 backdrop-blur-sm py-1 px-3 rounded-full border border-white/50 shadow-sm">
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-          <span className="text-[7px] font-black text-blue-900/60 uppercase tracking-widest">Besucht</span>
+    {CITIES.map(c => {
+      const { x, y } = pos(c.lat, c.lng);
+      return (
+        <div key={c.name} className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none" style={{ left: `${Math.min(x, 93)}%`, top: `${Math.min(y, 91)}%` }}>
+          <span className="w-1 h-1 rounded-full bg-secondary/60" />
+          <span className="text-[8px] font-medium text-secondary/80 mt-0.5">{c.name}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-0.5 bg-blue-200" />
-          <span className="text-[7px] font-black text-blue-300 uppercase tracking-widest">Inn</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+      );
+    })}
+
+    {resorts.map(resort => {
+      if (resort.lat == null || resort.lng == null) return null;
+      const { x, y } = pos(resort.lat, resort.lng);
+      const count = visits[resort.id] ?? 0;
+      const selected = resort.id === selectedId;
+      return (
+        <button
+          key={resort.id}
+          aria-label={`${resort.name}, ${count} Besuche`}
+          onClick={e => {
+            e.stopPropagation();
+            haptic();
+            onSelect(selected ? undefined : resort.id);
+          }}
+          className="absolute -translate-x-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center"
+          style={{ left: `${x}%`, top: `${y}%`, zIndex: selected ? 20 : count ? 10 : 1 }}
+        >
+          <motion.span
+            initial={false}
+            animate={{ scale: selected ? 1.35 : 1 }}
+            transition={{ type: 'spring', damping: 18, stiffness: 400 }}
+            className={
+              count
+                ? `min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center shadow-md ring-2 ring-card ${resort.glacier ? 'bg-teal' : 'bg-accent'}`
+                : `w-2.5 h-2.5 rounded-full ring-2 ring-card ${selected ? 'bg-secondary' : 'bg-tertiary'}`
+            }
+          >
+            {count > 0 && count}
+          </motion.span>
+        </button>
+      );
+    })}
+  </div>
+);

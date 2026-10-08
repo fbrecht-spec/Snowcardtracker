@@ -3,9 +3,19 @@
 Kleine Web-App (PWA) zum Erfassen meiner Skitage in Tirol. Sie vergleicht den Preis der
 Snowcard Tirol (drei Tarife) mit der Summe der Tageskartenpreise und zeigt den Break-even.
 
-- React 19, TypeScript, Vite, Tailwind CSS
+- React 19, TypeScript, Vite, Tailwind CSS, Motion (Animationen), Recharts
+- iOS-nahes Design mit automatischem Hell-/Dunkelmodus
+- Übersicht mit Break-even-Ring, Logbuch mit Archiv, Gebiete mit Karte und Suche,
+  Statistik mit interaktiven Diagrammen, Saisonvergleich und Erfolgen
 - Kein Backend, keine KI. Alle Daten bleiben im `localStorage` des Geräts.
 - Datensicherung über Export/Import (JSON) in den Optionen.
+
+## Projektstruktur
+
+- `App.tsx` – Tabs, Sheets, Toasts
+- `views/` – die fünf Bildschirme
+- `components/` – fachliche Bausteine (Karte, Diagramme, Sheets), `components/ui/` – iOS-Bausteine
+- `lib/` – State-Hook, Speicherung/Migration, Statistik, Formatierung
 
 ## Entwicklung
 

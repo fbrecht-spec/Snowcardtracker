@@ -1,58 +1,52 @@
 import React from 'react';
-import { Award as AwardIcon, CheckCircle, Lock, Star, Crown, Zap, Map, Mountain } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Award as AwardIcon, Crown, Lock, Map, Mountain, Star, Zap } from 'lucide-react';
 import { Award } from '../types';
 
-interface AwardsGridProps {
-  awards: Award[];
-}
+const ICONS = { Star, Crown, Zap, Map, Mountain, Award: AwardIcon };
 
-const getIcon = (iconName: string, size: number) => {
-  switch (iconName) {
-    case 'Star': return <Star size={size} />;
-    case 'Crown': return <Crown size={size} />;
-    case 'Zap': return <Zap size={size} />;
-    case 'Map': return <Map size={size} />;
-    case 'Mountain': return <Mountain size={size} />;
-    default: return <AwardIcon size={size} />;
-  }
+const COLORS: Record<string, string> = {
+  Star: 'bg-warning',
+  Crown: 'bg-indigo',
+  Zap: 'bg-danger',
+  Map: 'bg-success',
+  Mountain: 'bg-teal',
+  Award: 'bg-accent',
 };
 
-export const AwardsGrid: React.FC<AwardsGridProps> = ({ awards }) => {
+export const AwardsGrid: React.FC<{ awards: Award[] }> = ({ awards }) => {
+  const sorted = [...awards].sort((a, b) => Number(b.isUnlocked) - Number(a.isUnlocked));
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {awards.map((award) => (
-        <div 
-          key={award.id} 
-          className={`p-5 rounded-[2rem] border transition-all ${
-            award.isUnlocked 
-              ? 'bg-white border-blue-100 shadow-sm' 
-              : 'bg-gray-50/50 border-gray-100 grayscale opacity-60'
-          }`}
-        >
-          <div className="flex justify-between items-start mb-3">
-            <div className={`p-2.5 rounded-2xl ${award.isUnlocked ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-gray-200 text-gray-400'}`}>
-              {getIcon(award.icon, 18)}
+    <div className="grid grid-cols-2 gap-3">
+      {sorted.map((award, i) => {
+        const Icon = ICONS[award.icon as keyof typeof ICONS] ?? AwardIcon;
+        const ratio = award.target ? Math.min(1, (award.progress ?? 0) / award.target) : 0;
+        return (
+          <motion.div
+            key={award.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.03 }}
+            className="bg-card rounded-[14px] p-3.5"
+          >
+            <div className="flex items-start justify-between">
+              <span className={`w-9 h-9 rounded-full flex items-center justify-center text-white ${award.isUnlocked ? COLORS[award.icon] ?? 'bg-accent' : 'bg-fill/[0.2]'}`}>
+                {award.isUnlocked ? <Icon size={18} /> : <Lock size={15} className="text-secondary" />}
+              </span>
+              {award.target && !award.isUnlocked && (
+                <span className="text-[12px] text-secondary tabular-nums">{award.progress}/{award.target}</span>
+              )}
             </div>
-            {award.isUnlocked ? (
-              <CheckCircle size={16} className="text-emerald-500" />
-            ) : (
-              <Lock size={16} className="text-gray-300" />
+            <div className={`mt-2.5 text-[15px] font-semibold leading-tight ${award.isUnlocked ? '' : 'text-secondary'}`}>{award.title}</div>
+            <div className="text-[12px] text-secondary leading-snug mt-0.5">{award.description}</div>
+            {award.target && !award.isUnlocked && (
+              <div className="mt-2.5 h-1 rounded-full bg-fill/[0.12] dark:bg-fill/[0.24] overflow-hidden">
+                <motion.div className="h-full bg-accent rounded-full" initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} transition={{ duration: 0.8, delay: 0.2 }} />
+              </div>
             )}
-          </div>
-          <h4 className="text-sm font-black text-gray-800 leading-tight mb-1">{award.title}</h4>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight leading-tight">
-            {award.description}
-          </p>
-          {award.progress !== undefined && award.target !== undefined && !award.isUnlocked && (
-            <div className="mt-3 w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-blue-500 h-full rounded-full transition-all" 
-                style={{ width: `${(award.progress / award.target) * 100}%` }}
-              />
-            </div>
-          )}
-        </div>
-      ))}
+          </motion.div>
+        );
+      })}
     </div>
   );
 };
