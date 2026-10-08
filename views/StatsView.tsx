@@ -5,6 +5,7 @@ import { Card, EmptyState } from '../components/ui/Feedback';
 import { BreakEvenChart, MonthlyChart, RankingBars, SeasonComparison, SeasonSummary } from '../components/Charts';
 import { AwardsGrid } from '../components/AwardsGrid';
 import { CompanionsCard, ConditionsCard } from '../components/DayInsights';
+import { SeasonCalendar } from '../components/SeasonCalendar';
 import { Snowcard } from '../lib/useSnowcard';
 import { computeAwards, computeSeasonStats } from '../lib/stats';
 import { shortSeasonLabel } from '../lib/format';
@@ -63,6 +64,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ app, onShowRecap }) => {
         <>
           <Card title="Amortisation" trailing={<span className="text-[13px] text-secondary">Antippen für Details</span>}>
             <BreakEvenChart days={seasonDays} tiers={state.settings.snowcardTiers} activeTier={state.settings.activeTier} resortNameOf={app.resortNameOf} />
+          </Card>
+
+          <Card title="Saisonkalender">
+            <SeasonCalendar days={seasonDays} seasonLabel={currentSeasonLabel} resortNameOf={app.resortNameOf} />
           </Card>
 
           <Card title="Skitage pro Monat">
