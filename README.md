@@ -1,7 +1,7 @@
 # Flo's Snowcard Tracker
 
 Kleine Web-App (PWA) zum Erfassen meiner Skitage in Tirol. Sie vergleicht den Preis der
-Snowcard Tirol (drei Tarife) mit der Summe der Tageskartenpreise und zeigt den Break-even.
+Snowcard Tirol (vier Tarife) mit der Summe der Tageskartenpreise und zeigt den Break-even.
 
 - React 19, TypeScript, Vite, Tailwind CSS, Motion (Animationen), Recharts
 - iOS-nahes Design mit automatischem Hell-/Dunkelmodus
