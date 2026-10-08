@@ -3,6 +3,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { BookOpen, ChartColumn, LayoutGrid, MountainSnow, Settings } from 'lucide-react';
 import { Resort, SkiDay } from './types';
 import { useSnowcard } from './lib/useSnowcard';
+import { useWeather } from './lib/weather';
 import { celebrate, haptic } from './lib/feedback';
 import { TabBar, TabItem } from './components/ui/TabBar';
 import { Toast, ToastData } from './components/ui/Feedback';
@@ -32,6 +33,7 @@ type ResortSheetState = { open: boolean; resort?: Resort };
 
 const App: React.FC = () => {
   const app = useSnowcard();
+  const weather = useWeather(app.state.settings.resorts);
   const [tab, setTab] = useState<Tab>('overview');
   const [daySheet, setDaySheet] = useState<DaySheetState>({ open: false });
   const [resortSheet, setResortSheet] = useState<ResortSheetState>({ open: false });
@@ -82,9 +84,9 @@ const App: React.FC = () => {
   }, [app]);
 
   const views: Record<Tab, React.ReactNode> = {
-    overview: <OverviewView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onShowLogbook={() => setTab('logbook')} onBackup={backup} />,
+    overview: <OverviewView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onShowLogbook={() => setTab('logbook')} onBackup={backup} weather={weather} onShowResorts={() => setTab('resorts')} />,
     logbook: <LogbookView app={app} onAddDay={openAddDay} onEditDay={openEditDay} onDeleteDay={deleteDay} />,
-    resorts: <ResortsView app={app} onOpenResort={resort => setResortSheet({ open: true, resort })} />,
+    resorts: <ResortsView app={app} weather={weather} onOpenResort={resort => setResortSheet({ open: true, resort })} />,
     stats: <StatsView app={app} onShowRecap={() => setShowRecap(true)} />,
     settings: <SettingsView app={app} notify={notify} />,
   };
@@ -130,6 +132,7 @@ const App: React.FC = () => {
         open={resortSheet.open}
         resort={resortSheet.resort}
         app={app}
+        weather={weather}
         onClose={() => setResortSheet(prev => ({ ...prev, open: false }))}
       />
 

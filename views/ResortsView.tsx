@@ -5,6 +5,8 @@ import { Page, NavButton } from '../components/ui/Page';
 import { ListGroup, ListRow } from '../components/ui/List';
 import { SegmentedControl } from '../components/ui/Controls';
 import { TirolMap } from '../components/TirolMap';
+import { BestSnowCard } from '../components/BestSnowCard';
+import { WeatherInfo } from '../lib/weather';
 import { Resort } from '../types';
 import { Snowcard } from '../lib/useSnowcard';
 import { formatDayLong, formatEuro } from '../lib/format';
@@ -13,10 +15,11 @@ type SortKey = 'name' | 'visits' | 'price';
 
 interface ResortsViewProps {
   app: Snowcard;
+  weather: WeatherInfo;
   onOpenResort: (resort?: Resort) => void;
 }
 
-export const ResortsView: React.FC<ResortsViewProps> = ({ app, onOpenResort }) => {
+export const ResortsView: React.FC<ResortsViewProps> = ({ app, weather, onOpenResort }) => {
   const { sortedResorts, visitsByResort } = app;
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('name');
@@ -50,6 +53,8 @@ export const ResortsView: React.FC<ResortsViewProps> = ({ app, onOpenResort }) =
       subtitle={`${visitedCount} von ${sortedResorts.length} diese Saison besucht`}
       trailing={<NavButton onClick={() => onOpenResort()} label="Gebiet hinzufügen"><Plus size={20} strokeWidth={2.5} /></NavButton>}
     >
+      <BestSnowCard weather={weather} resorts={sortedResorts} onOpenResort={onOpenResort} />
+
       <section>
         <TirolMap resorts={sortedResorts} visits={seasonVisits} selectedId={selectedId} onSelect={setSelectedId} />
         <AnimatePresence mode="popLayout">

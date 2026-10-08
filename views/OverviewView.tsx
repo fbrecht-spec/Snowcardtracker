@@ -10,6 +10,8 @@ import { TIER_INFO } from '../constants';
 import { Snowcard } from '../lib/useSnowcard';
 import { estimateDaysToBreakEven } from '../lib/stats';
 import { BACKUP_REMINDER_DAYS, daysSinceBackup } from '../lib/backup';
+import { WeatherInfo } from '../lib/weather';
+import { BestSnowTeaser } from '../components/BestSnowCard';
 import { formatDayLong, formatEuro, shortSeasonLabel } from '../lib/format';
 
 
@@ -23,9 +25,11 @@ interface OverviewViewProps {
   onEditDay: (day: SkiDay) => void;
   onShowLogbook: () => void;
   onBackup: () => void;
+  weather: WeatherInfo;
+  onShowResorts: () => void;
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEditDay, onShowLogbook, onBackup }) => {
+export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEditDay, onShowLogbook, onBackup, weather, onShowResorts }) => {
   const { seasonStats: s, seasonDays, otherSeasons, currentSeasonLabel, state } = app;
   const daysLeft = estimateDaysToBreakEven(s, state.settings.resorts);
   const hasData = state.skiDays.length + state.archivedSeasons.length > 0;
@@ -107,6 +111,8 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEdi
           <div className="text-[13px] text-secondary mt-2 tabular-nums">{formatEuro(s.totalValue)} von {formatEuro(s.snowcardPrice)}</div>
         </div>
       </section>
+
+      <BestSnowTeaser weather={weather} resorts={state.settings.resorts} onClick={onShowResorts} />
 
       <div className="grid grid-cols-2 gap-3">
         {tiles.map(t => (

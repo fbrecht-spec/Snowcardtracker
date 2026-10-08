@@ -5,18 +5,20 @@ import { ListGroup, ListRow } from './ui/List';
 import { Switch } from './ui/Controls';
 import { Resort } from '../types';
 import { Snowcard } from '../lib/useSnowcard';
+import { WeatherInfo, describeWeather } from '../lib/weather';
 import { formatDayLong, formatPrice } from '../lib/format';
 
 interface ResortSheetProps {
   open: boolean;
   resort?: Resort; // gesetzt = bearbeiten, sonst neu
   app: Snowcard;
+  weather?: WeatherInfo;
   onClose: () => void;
 }
 
 const inputClass = 'w-full bg-transparent text-[17px] text-right text-label outline-none placeholder:text-tertiary';
 
-export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, onClose }) => {
+export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, weather, onClose }) => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [glacier, setGlacier] = useState(false);
@@ -66,6 +68,18 @@ export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, onC
         />
         <ListRow title="Gletscherskigebiet" trailing={<Switch checked={glacier} onChange={setGlacier} label="Gletscherskigebiet" />} />
       </ListGroup>
+
+      {resort && weather?.data[resort.id] && (() => {
+        const w = weather.data[resort.id];
+        const desc = describeWeather(w.weatherCode);
+        return (
+          <ListGroup header="Heute" footer={`Modellwerte auf ${w.elevation} m · Wetterdaten: Open-Meteo.com`}>
+            <ListRow title="Wetter" value={`${desc.emoji} ${desc.label}, ${Math.round(w.temperature)}°`} />
+            <ListRow title="Schneehöhe" value={`${w.snowDepthCm} cm`} />
+            <ListRow title="Neuschnee (gestern + heute)" value={`${w.newSnowCm} cm`} />
+          </ListGroup>
+        );
+      })()}
 
       {resort && (
         <ListGroup header="Besuche">
