@@ -133,6 +133,7 @@ const App: React.FC = () => {
         resort={resortSheet.resort}
         app={app}
         weather={weather}
+        notify={notify}
         onClose={() => setResortSheet(prev => ({ ...prev, open: false }))}
       />
 

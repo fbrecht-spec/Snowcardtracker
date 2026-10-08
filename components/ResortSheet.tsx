@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { createId } from '../lib/id';
+import { Copy, MessageCircle, Utensils } from 'lucide-react';
 import { Sheet } from './ui/Sheet';
-import { ListGroup, ListRow } from './ui/List';
+import { IconBadge, ListGroup, ListRow } from './ui/List';
 import { Switch } from './ui/Controls';
 import { Resort } from '../types';
 import { Snowcard } from '../lib/useSnowcard';
+import { createId } from '../lib/id';
 import { WeatherInfo, describeWeather } from '../lib/weather';
+import { HUT_ASSISTANTS, copyText, hutPrompt } from '../lib/hutPrompt';
 import { formatDayLong, formatPrice } from '../lib/format';
 
 interface ResortSheetProps {
@@ -14,11 +16,12 @@ interface ResortSheetProps {
   app: Snowcard;
   weather?: WeatherInfo;
   onClose: () => void;
+  notify?: (message: string) => void;
 }
 
 const inputClass = 'w-full bg-transparent text-[17px] text-right text-label outline-none placeholder:text-tertiary';
 
-export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, weather, onClose }) => {
+export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, weather, onClose, notify }) => {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [glacier, setGlacier] = useState(false);
@@ -80,6 +83,25 @@ export const ResortSheet: React.FC<ResortSheetProps> = ({ open, resort, app, wea
           </ListGroup>
         );
       })()}
+
+      {resort && (
+        <ListGroup header="Hütten-Tipp" footer="Öffnet deinen Hütten-Guide-Prompt für dieses Gebiet in der KI deiner Wahl. KI-Angaben können falsch sein – vor Ort kurz prüfen.">
+          {HUT_ASSISTANTS.map((a, i) => (
+            <ListRow
+              key={a.id}
+              title={a.label}
+              leading={<IconBadge icon={i === 0 ? Utensils : MessageCircle} className={i === 0 ? 'bg-warning' : 'bg-success'} />}
+              chevron
+              onClick={() => window.open(a.url(hutPrompt(resort.name)), '_blank', 'noopener')}
+            />
+          ))}
+          <ListRow
+            title="Prompt kopieren"
+            leading={<IconBadge icon={Copy} className="bg-[#8E8E93]" />}
+            onClick={async () => notify?.((await copyText(hutPrompt(resort.name))) ? 'Prompt kopiert' : 'Kopieren nicht möglich')}
+          />
+        </ListGroup>
+      )}
 
       {resort && (
         <ListGroup header="Besuche">
