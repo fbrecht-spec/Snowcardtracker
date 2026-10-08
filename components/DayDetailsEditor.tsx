@@ -13,7 +13,7 @@ interface DayDetailsEditorProps {
 
 const chip = (active: boolean) =>
   `h-9 px-3 rounded-full text-[15px] flex items-center gap-1.5 transition-colors active:scale-95 ${
-    active ? 'bg-accent text-white' : 'bg-fill/[0.12] dark:bg-fill/[0.24] text-label'
+    active ? 'bg-accent text-on-accent' : 'bg-fill/[0.12] dark:bg-fill/[0.24] text-label'
   }`;
 
 /** Schnee, Wetter, Bewertung, Begleiter und Notiz – alles optional, nochmal tippen hebt die Auswahl auf. */
@@ -104,7 +104,7 @@ export const DayDetailsEditor: React.FC<DayDetailsEditorProps> = ({ value, onCha
               className="flex-1 min-w-0 h-9 px-3 rounded-[10px] bg-fill/[0.12] dark:bg-fill/[0.24] outline-none placeholder:text-secondary"
               aria-label="Begleiter hinzufügen"
             />
-            <button type="submit" disabled={!name.trim()} className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center disabled:opacity-30" aria-label="Name übernehmen">
+            <button type="submit" disabled={!name.trim()} className="w-9 h-9 rounded-full bg-accent text-on-accent flex items-center justify-center disabled:opacity-30" aria-label="Name übernehmen">
               <Plus size={18} />
             </button>
           </form>

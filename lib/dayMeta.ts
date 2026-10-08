@@ -2,7 +2,7 @@ import { SkiDay, SnowQuality, Weather } from '../types';
 
 export const SNOW_OPTIONS: { value: SnowQuality; label: string; emoji: string }[] = [
   { value: 'pulver', label: 'Pulver', emoji: '❄️' },
-  { value: 'firn', label: 'Firn', emoji: '🌾' },
+  { value: 'normal', label: 'Normal', emoji: '⛷️' },
   { value: 'eis', label: 'Eis', emoji: '🧊' },
 ];
 

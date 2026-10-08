@@ -8,7 +8,7 @@ export interface Resort {
   lng?: number;
 }
 
-export type SnowQuality = 'pulver' | 'firn' | 'eis';
+export type SnowQuality = 'pulver' | 'normal' | 'eis';
 export type Weather = 'sonne' | 'wolkig' | 'bedeckt' | 'schnee' | 'nebel';
 
 export interface SkiDay {

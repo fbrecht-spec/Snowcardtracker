@@ -8,7 +8,7 @@ const LEGACY_STORAGE_KEY = 'snowcard_tracker_state_v3';
 const EXPORT_APP_ID = 'flos-snowcard-tracker';
 
 const TIER_KEYS: SnowcardTierKey[] = TIER_INFO.map(t => t.key);
-const SNOW: SnowQuality[] = ['pulver', 'firn', 'eis'];
+const SNOW: SnowQuality[] = ['pulver', 'normal', 'eis'];
 const WEATHER: Weather[] = ['sonne', 'wolkig', 'bedeckt', 'schnee', 'nebel'];
 
 const isObject = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -52,6 +52,7 @@ const normalizeSkiDay = (raw: unknown): SkiDay | null => {
   };
   if (typeof raw.resortName === 'string') day.resortName = raw.resortName;
   if (SNOW.includes(raw.snow)) day.snow = raw.snow;
+  else if (raw.snow === 'firn') day.snow = 'normal'; // früherer Name
   if (WEATHER.includes(raw.weather)) day.weather = raw.weather;
   if (isNumber(raw.rating) && raw.rating >= 1 && raw.rating <= 5) day.rating = Math.round(raw.rating);
   if (Array.isArray(raw.companions)) {

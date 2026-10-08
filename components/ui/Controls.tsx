@@ -24,7 +24,7 @@ export const SegmentedControl = <T extends string>({ options, value, onChange }:
           {o.value === value && (
             <motion.span
               layoutId={`seg-${id}`}
-              className="absolute inset-0 rounded-[7px] bg-card dark:bg-[#636366] shadow-[0_3px_8px_rgba(0,0,0,0.12),0_3px_1px_rgba(0,0,0,0.04)]"
+              className="absolute inset-0 rounded-[7px] bg-card dark:bg-thumb shadow-[0_3px_8px_rgba(0,0,0,0.12),0_3px_1px_rgba(0,0,0,0.04)]"
               transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             />
           )}

@@ -6,7 +6,8 @@ const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
 export default {
   content: ['./index.html', './*.tsx', './components/**/*.tsx', './views/**/*.tsx'],
-  darkMode: 'media',
+  // dark: gilt bei manuell gewähltem Dunkelmodus oder automatisch nach Systemeinstellung (außer bei „Hell“)
+  darkMode: ['variant', ['@media (prefers-color-scheme: dark) { &:not([data-theme=light] *) }', '&:is([data-theme=dark] *)']],
   theme: {
     extend: {
       colors: {
@@ -24,6 +25,8 @@ export default {
         danger: token('danger'),
         indigo: token('indigo'),
         teal: token('teal'),
+        'on-accent': token('on-accent'),
+        thumb: token('thumb'),
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"Inter Variable"', 'system-ui', 'sans-serif'],

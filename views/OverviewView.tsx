@@ -58,7 +58,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ app, onAddDay, onEdi
             <p className="text-[13px] text-secondary mt-0.5">
               {backupAge === undefined ? 'Du hast noch nie ein Backup gemacht.' : `Dein letztes Backup ist ${backupAge} Tage her.`} Deine Skitage liegen nur auf diesem iPhone.
             </p>
-            <button onClick={onBackup} className="mt-3 h-8 px-3.5 rounded-full bg-accent text-white text-[13px] font-semibold active:opacity-70">
+            <button onClick={onBackup} className="mt-3 h-8 px-3.5 rounded-full bg-accent text-on-accent text-[13px] font-semibold active:opacity-70">
               Jetzt sichern
             </button>
           </div>

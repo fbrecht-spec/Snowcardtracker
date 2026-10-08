@@ -70,16 +70,16 @@ export const Sheet: React.FC<SheetProps> = ({ open, onClose, title, cancel, conf
               <div className="h-12 px-4 grid grid-cols-[1fr_auto_1fr] items-center">
                 <div>
                   {cancel && (
-                    <button onClick={cancel.onClick} className="text-[17px] text-accent active:opacity-50">{cancel.label}</button>
+                    <button onClick={cancel.onClick} className="text-[17px] text-accent whitespace-nowrap active:opacity-50">{cancel.label}</button>
                   )}
                 </div>
-                <h2 className="text-[17px] font-semibold text-center">{title}</h2>
+                <h2 className="text-[17px] font-semibold text-center whitespace-nowrap px-2">{title}</h2>
                 <div className="text-right">
                   {confirm && (
                     <button
                       onClick={confirm.onClick}
                       disabled={confirm.disabled}
-                      className="text-[17px] font-semibold text-accent disabled:text-tertiary active:opacity-50"
+                      className="text-[17px] font-semibold text-accent whitespace-nowrap disabled:text-tertiary active:opacity-50"
                     >
                       {confirm.label}
                     </button>

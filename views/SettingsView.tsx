@@ -7,6 +7,8 @@ import { Snowcard } from '../lib/useSnowcard';
 import { parseImportFile } from '../lib/storage';
 import { daysSinceBackup } from '../lib/backup';
 import { haptic } from '../lib/feedback';
+import { ThemePref, useTheme } from '../lib/theme';
+import { SegmentedControl } from '../components/ui/Controls';
 
 const backupLabel = (days?: number) =>
   days === undefined ? 'Noch nie gesichert' : days === 0 ? 'Zuletzt heute gesichert' : days === 1 ? 'Zuletzt gestern gesichert' : `Zuletzt vor ${days} Tagen gesichert`;
@@ -18,6 +20,7 @@ interface SettingsViewProps {
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ app, notify }) => {
   const { state } = app;
+  const theme = useTheme();
   const importInputRef = useRef<HTMLInputElement>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
 
@@ -52,6 +55,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ app, notify }) => {
 
   return (
     <Page title="Einstellungen">
+      <section>
+        <h3 className="px-4 pb-1.5 text-[13px] uppercase tracking-[0.02em] text-secondary">Erscheinungsbild</h3>
+        <SegmentedControl<ThemePref>
+          options={[{ value: 'system', label: 'Automatisch' }, { value: 'light', label: 'Hell' }, { value: 'dark', label: 'Dunkel' }]}
+          value={theme.pref}
+          onChange={theme.setPref}
+        />
+        <p className="px-4 pt-1.5 text-[13px] leading-snug text-secondary">Dunkel ist der Neon-Modus. Schnell umschalten geht auch oben links mit Sonne/Mond. „Automatisch“ folgt dem iPhone.</p>
+      </section>
+
       <ListGroup header="Snowcard-Tarif" footer="Der gewählte Tarif ist die Grundlage für Break-even und Ersparnis. Preise sind antippbar.">
         {TIER_INFO.map(t => {
           const active = state.settings.activeTier === t.key;

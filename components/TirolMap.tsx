@@ -75,7 +75,7 @@ export const TirolMap: React.FC<TirolMapProps> = ({ resorts, visits, selectedId,
             transition={{ type: 'spring', damping: 18, stiffness: 400 }}
             className={
               count
-                ? `min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center shadow-md ring-2 ring-card ${resort.glacier ? 'bg-teal' : 'bg-accent'}`
+                ? `min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-on-accent flex items-center justify-center shadow-md ring-2 ring-card ${resort.glacier ? 'bg-teal' : 'bg-accent'}`
                 : `w-2.5 h-2.5 rounded-full ring-2 ring-card ${selected ? 'bg-secondary' : 'bg-tertiary'}`
             }
           >

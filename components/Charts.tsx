@@ -177,7 +177,7 @@ export const SeasonComparison: React.FC<{ seasons: SeasonSummary[] }> = ({ seaso
           </div>
           <div className="flex-1 h-6 rounded-[6px] bg-fill/[0.08] dark:bg-fill/[0.2] overflow-hidden">
             <motion.div
-              className={`h-full rounded-[6px] flex items-center justify-end pr-2 text-[12px] font-semibold text-white ${s.current ? 'bg-accent' : 'bg-indigo/80'}`}
+              className={`h-full rounded-[6px] flex items-center justify-end pr-2 text-[12px] font-semibold text-on-accent ${s.current ? 'bg-accent' : 'bg-indigo/80'}`}
               initial={{ width: 0 }}
               animate={{ width: `${Math.max(12, (s.days / max) * 100)}%` }}
               transition={{ type: 'spring', damping: 24, stiffness: 140, delay: i * 0.06 }}

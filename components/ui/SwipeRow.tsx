@@ -35,7 +35,7 @@ export const SwipeRow: React.FC<SwipeRowProps> = ({ onDelete, children }) => {
         tabIndex={open ? 0 : -1}
         aria-hidden={!open}
         onClick={remove}
-        className="absolute inset-y-0 right-0 w-full bg-danger text-white flex items-center justify-end"
+        className="absolute inset-y-0 right-0 w-full bg-danger text-on-accent flex items-center justify-end"
         aria-label="Löschen"
       >
         <span className="w-[84px] flex flex-col items-center gap-0.5 text-[13px] font-medium">

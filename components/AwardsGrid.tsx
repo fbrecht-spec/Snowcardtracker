@@ -40,7 +40,7 @@ export const AwardsGrid: React.FC<{ awards: Award[] }> = ({ awards }) => {
             className="bg-card rounded-[14px] p-3.5"
           >
             <div className="flex items-start justify-between">
-              <span className={`w-9 h-9 rounded-full flex items-center justify-center text-white ${award.isUnlocked ? COLORS[award.icon] ?? 'bg-accent' : 'bg-fill/[0.2]'}`}>
+              <span className={`w-9 h-9 rounded-full flex items-center justify-center text-on-accent ${award.isUnlocked ? COLORS[award.icon] ?? 'bg-accent' : 'bg-fill/[0.2]'}`}>
                 {award.isUnlocked ? <Icon size={18} /> : <Lock size={15} className="text-secondary" />}
               </span>
               {award.target && !award.isUnlocked && (

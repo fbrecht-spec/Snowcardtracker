@@ -18,7 +18,7 @@ export const ListGroup: React.FC<ListGroupProps> = ({ header, footer, children }
 
 /** Farbiges Symbol-Quadrat wie in den iOS-Einstellungen. */
 export const IconBadge: React.FC<{ icon: LucideIcon; className: string; size?: number }> = ({ icon: Icon, className, size = 29 }) => (
-  <span className={`shrink-0 rounded-[7px] text-white flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
+  <span className={`shrink-0 rounded-[7px] text-on-accent flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
     <Icon size={size * 0.6} strokeWidth={2.2} />
   </span>
 );

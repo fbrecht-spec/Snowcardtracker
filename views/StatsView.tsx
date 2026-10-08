@@ -49,12 +49,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ app, onShowRecap }) => {
     <Page title="Statistik" subtitle={`Saison ${shortSeasonLabel(currentSeasonLabel)}`}>
       <button
         onClick={onShowRecap}
-        className="w-full rounded-[14px] p-4 flex items-center gap-3 text-left text-white bg-gradient-to-r from-indigo to-accent shadow-lg shadow-accent/20 active:scale-[0.98] transition-transform"
+        className="w-full rounded-[14px] p-4 flex items-center gap-3 text-left text-on-accent bg-gradient-to-r from-indigo to-accent shadow-lg shadow-accent/20 active:scale-[0.98] transition-transform"
       >
         <span className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><Sparkles size={20} /></span>
         <span className="flex-1">
           <span className="block text-[17px] font-semibold">Saison-Rückblick</span>
-          <span className="block text-[13px] text-white/80">Dein Winter auf einen Blick</span>
+          <span className="block text-[13px] text-on-accent/80">Dein Winter auf einen Blick</span>
         </span>
       </button>
 

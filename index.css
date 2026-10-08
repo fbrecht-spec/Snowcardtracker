@@ -18,26 +18,51 @@
   --danger: 255 59 48;
   --indigo: 88 86 214;
   --teal: 48 176 199;
+  --on-accent: 255 255 255;
+  --thumb: 255 255 255;
   color-scheme: light;
 }
 
-/* dunkel */
+/* Dunkel = Neon-Modus. Gilt bei data-theme="dark" oder automatisch, wenn das iPhone dunkel ist
+   und nicht ausdrücklich „Hell“ gewählt wurde. */
+:root[data-theme='dark'] {
+  --bg: 0 0 0;
+  --card: 10 16 11;
+  --bar: 6 10 7;
+  --fill: 57 255 20;
+  --label: 57 255 20;
+  --secondary: 44 190 26;
+  --tertiary: 30 110 24;
+  --separator: 26 64 26;
+  --accent: 0 229 255;
+  --on-accent: 0 0 0;
+  --thumb: 26 52 28;
+  --success: 57 255 20;
+  --warning: 255 230 0;
+  --danger: 255 46 136;
+  --indigo: 178 107 255;
+  --teal: 0 255 198;
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: 0 0 0;
-    --card: 28 28 30;
-    --bar: 22 22 24;
-    --fill: 118 118 128;
-    --label: 255 255 255;
-    --secondary: 152 152 159;
-    --tertiary: 90 90 95;
-    --separator: 56 56 58;
-    --accent: 10 132 255;
-    --success: 48 209 88;
-    --warning: 255 159 10;
-    --danger: 255 69 58;
-    --indigo: 94 92 230;
-    --teal: 64 200 224;
+    --card: 10 16 11;
+    --bar: 6 10 7;
+    --fill: 57 255 20;
+    --label: 57 255 20;
+    --secondary: 44 190 26;
+    --tertiary: 30 110 24;
+    --separator: 26 64 26;
+    --accent: 0 229 255;
+    --on-accent: 0 0 0;
+    --thumb: 26 52 28;
+    --success: 57 255 20;
+    --warning: 255 230 0;
+    --danger: 255 46 136;
+    --indigo: 178 107 255;
+    --teal: 0 255 198;
     color-scheme: dark;
   }
 }
